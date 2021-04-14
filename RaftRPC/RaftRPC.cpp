@@ -1,12 +1,43 @@
-// RaftRPC.cpp : This file contains the 'main' function. Program execution begins and ends there.
+// RaftTFM.cpp : This file contains the 'main' function. Program execution begins and ends there.
 //
 
 #include <iostream>
+#include "Server.h"
+#include <stdint.h>
+#include <string>
+#include "Communication.h"
+#include "RPC.h"
+//#include "Client.h"
 
-int main()
+
+
+int main(int argc, char** argv)
 {
-    std::cout << "Hello World!\n";
+    std::cout << "RAFT Test...\n";
+    if (argc < 2) {
+        printf("Usage:\r\n");
+        printf("Param (1): id server\r\n");
+        printf("Example RaftTest.exe 1\r\n");
+    }
+    else {
+        // If it is a Client. 
+        //if (std::stoi(argv[1]) > NUM_SERVERS) {
+        //    Tracer::trace("*************************\r\n");
+        //    Tracer::trace("   Starting RaftClient\r\n");
+        //    Tracer::trace("************************\r\n");
+        //    Client client;
+        //    if (!client.start(".\\..\\Debug\\numbers_starts_with_1.txt", std::stoi(argv[1])))
+        //        Tracer::trace("RaftClient - Failed to start. \r\n");
+        //}
+        // If it is a Server. 
+        //else {
+            Server server(std::stoi(argv[1]));
+            server.start();
+        //}
+    }
 }
+
+
 
 // Run program: Ctrl + F5 or Debug > Start Without Debugging menu
 // Debug program: F5 or Debug > Start Debugging menu

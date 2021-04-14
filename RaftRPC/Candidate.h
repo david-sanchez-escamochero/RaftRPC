@@ -41,6 +41,23 @@ protected:
 
 	std::condition_variable cv_send_request_vote_to_all_servers_;
 
-	
+	void append_entry_role(
+		/* [in] */ int argument_term_,
+		/* [in] */ int argument_leader_id_,
+		/* [in] */ int argument_prev_log_index_,
+		/* [in] */ int argument_prev_log_term_,
+		/* [in] */ int argument_entries_[1000],
+		/* [in] */ int argument_leader_commit_,
+		/* [out] */ int* result_term_,
+		/* [out] */ int* result_success_);
+
+
+	void request_vote_role(
+		/* [in] */ int argument_term_,
+		/* [in] */ int argument_candidate_id_,
+		/* [in] */ int argument_last_log_index_,
+		/* [in] */ int argument_last_log_term_,
+		/* [out] */ int* result_term_,
+		/* [out] */ int* result_vote_granted_);
 };
 

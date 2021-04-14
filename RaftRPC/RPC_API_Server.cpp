@@ -6,9 +6,49 @@
 
 // File Example1Server.cpp
 #include <iostream>
-#include "RaftTFM_rpc_server.h"          
+
+
+IRole* role_ = nullptr;
 
 // Server function.
+
+RPC_API_Server::RPC_API_Server()
+{    
+    role_ = nullptr;
+}
+
+RPC_API_Server::~RPC_API_Server()
+{
+    RPC_STATUS status;
+
+    status = RpcMgmtStopServerListening(NULL);
+
+    if (status)
+    {
+        exit(status);
+    }
+
+    status = RpcServerUnregisterIf(NULL, NULL, FALSE);
+
+    if (status)
+    {
+        exit(status);
+    }
+
+    if (thread_receive_.joinable())
+        thread_receive_.join();
+}
+
+void RPC_API_Server::start(int port_receiver)
+{    
+    port_receiver_ = port_receiver;
+    thread_receive_ = std::thread(&RPC_API_Server::receive, this);
+}
+
+void RPC_API_Server::set_role(IRole* role)
+{
+    role_ = role;
+}
 
 
 
@@ -18,12 +58,21 @@ void rpc_server::append_entry_rpc_server(
     /* [in] */ int argument_leader_id_,
     /* [in] */ int argument_prev_log_index_,
     /* [in] */ int argument_prev_log_term_,
-    /* [in] */ int argument_entries_[10],
+    /* [in] */ int argument_entries_[1000],
     /* [in] */ int argument_leader_commit_,
     /* [out] */ int* result_term_,
     /* [out] */ int* result_success_)
 {
-    printf("append_entry \r\n");
+    if(role_)
+        role_->append_entry_role(
+                            argument_term_,
+                            argument_leader_id_,
+                            argument_prev_log_index_,
+                            argument_prev_log_term_,
+                            argument_entries_,
+                            argument_leader_commit_,
+                            result_term_,
+                            result_success_);
 }
 
 
@@ -36,7 +85,14 @@ void rpc_server::request_vote_rpc_server(
     /* [out] */ int* result_term_,
     /* [out] */ int* result_vote_granted_)
 {
-    printf("request_vote \r\n");
+    if (role_)
+        role_->request_vote_role(
+                            argument_term_,
+                            argument_candidate_id_,
+                            argument_last_log_index_,
+                            argument_last_log_term_,
+                            result_term_,
+                            result_vote_granted_);
 }
 
 // Naive security callback.
@@ -45,9 +101,10 @@ RPC_STATUS CALLBACK SecurityCallback(RPC_IF_HANDLE /*hInterface*/, void* /*pBind
     return RPC_S_OK; // Always allow anyone.
 }
 
+
 int RPC_API_Server::receive()
 {
-    printf("SERVER\r\n");
+    printf("RPC receiving...\r\n");
 
     RPC_STATUS status;
 

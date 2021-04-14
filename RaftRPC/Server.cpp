@@ -65,7 +65,7 @@ void Server::start()
 	//std::this_thread::sleep_for(std::chrono::milliseconds(30000));
 
 	// Start server thread. 
-	thread_server_dispatch_ = std::thread(&Server::dispatch, this);	
+	//thread_server_dispatch_ = std::thread(&Server::dispatch, this);	
 
 	// Start server check new state
 	thread_check_new_state_ = std::thread(&Server::check_new_state, this);

@@ -31,6 +31,7 @@ Follower::~Follower()
 void Follower::start()
 {
 	thread_check_candidate_ = std::thread(&Follower::check_if_there_is_candidate_or_leader, this);	
+	rpc_api_server_.start(((Server*)server_)->get_server_id());
 }
 
 
@@ -216,3 +217,25 @@ void Follower::dispatch(RPC_sockets* rpc)
 	}
 }
 
+void Follower::append_entry_role(
+	/* [in] */ int argument_term_,
+	/* [in] */ int argument_leader_id_,
+	/* [in] */ int argument_prev_log_index_,
+	/* [in] */ int argument_prev_log_term_,
+	/* [in] */ int argument_entries_[1000],
+	/* [in] */ int argument_leader_commit_,
+	/* [out] */ int* result_term_,
+	/* [out] */ int* result_success_) {
+	printf("FOLLOWER - append_entry_role\r\n");
+}
+
+
+void Follower::request_vote_role(
+	/* [in] */ int argument_term_,
+	/* [in] */ int argument_candidate_id_,
+	/* [in] */ int argument_last_log_index_,
+	/* [in] */ int argument_last_log_term_,
+	/* [out] */ int* result_term_,
+	/* [out] */ int* result_vote_granted_) {
+	printf("FOLLOWER - request_vote_role\r\n");
+}

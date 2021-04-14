@@ -8,6 +8,8 @@
 #include <queue>
 #include <chrono>
 #include <mutex>
+#include "RPC_API_Server.h"
+#include "RPC_API_Client.h"
 
 using namespace std::chrono;
 
@@ -43,6 +45,31 @@ protected:
 	void			dispatch_append_heart_beat(RPC_sockets* rpc);
 	void			dispatch_client_request_leader(RPC_sockets* rpc);
 	void			dispatch_client_request_value(RPC_sockets* rpc);
+
+
+
+
+	RPC_API_Client	rpc_api_client_;
+	RPC_API_Server  rpc_api_server_;
+	void append_entry_role(
+		/* [in] */ int argument_term_,
+		/* [in] */ int argument_leader_id_,
+		/* [in] */ int argument_prev_log_index_,
+		/* [in] */ int argument_prev_log_term_,
+		/* [in] */ int argument_entries_[1000],
+		/* [in] */ int argument_leader_commit_,
+		/* [out] */ int* result_term_,
+		/* [out] */ int* result_success_);
+
+
+	void request_vote_role(
+		/* [in] */ int argument_term_,
+		/* [in] */ int argument_candidate_id_,
+		/* [in] */ int argument_last_log_index_,
+		/* [in] */ int argument_last_log_term_,
+		/* [out] */ int* result_term_,
+		/* [out] */ int* result_vote_granted_);
+
 
 };
 
