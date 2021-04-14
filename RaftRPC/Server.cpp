@@ -76,7 +76,8 @@ void Server::start()
 	set_new_state(StateEnum::candidate_state);							
 
 
-	receive();
+	//receive();
+	keep_alive();
 }
 
 
@@ -98,6 +99,14 @@ void Server::dispatch()
 		}
 	}
 }
+
+void Server::keep_alive()
+{
+	while (true) {
+		std::this_thread::sleep_for(std::chrono::milliseconds(5000));
+	}	
+}
+
 
 void* Server::receive()
 {

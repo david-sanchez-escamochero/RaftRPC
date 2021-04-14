@@ -12,7 +12,7 @@
 #include "ManagerLog.h"
 
 
-#define NONE	-1
+
 
 
 typedef struct {
@@ -89,5 +89,7 @@ private:
 	std::mutex		mu_new_state_;
 	ManagerLog		manager_log_;
 	std::string		file_log_name_;
+
+	void			keep_alive();
 };
 

@@ -13,7 +13,7 @@ Communication::Communication() {
 
 int Communication::sendMessage(RPC_sockets* rpc, unsigned short port, std::string sender, std::string action, std::string receiver)
 {
-    
+    return 0;
     WSADATA wsaData;
     SOCKET conn_socket;
     struct sockaddr_in server;
@@ -76,6 +76,7 @@ int Communication::sendMessage(RPC_sockets* rpc, unsigned short port, std::strin
 
 int Communication::receiveMessage(RPC_sockets* rpc, unsigned short port, std::string receiver)
 {
+    return 0;
     WSADATA wsaData;
     SOCKET conn_socket, comm_socket;
     //SOCKET comunicacion;

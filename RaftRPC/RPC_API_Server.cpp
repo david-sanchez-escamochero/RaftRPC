@@ -15,6 +15,7 @@ IRole* role_ = nullptr;
 RPC_API_Server::RPC_API_Server()
 {    
     role_ = nullptr;
+    port_receiver_ = NONE;
 }
 
 RPC_API_Server::~RPC_API_Server()
@@ -108,12 +109,16 @@ int RPC_API_Server::receive()
 
     RPC_STATUS status;
 
+    char port[6];
+    sprintf_s(port, "%d", port_receiver_);
+
+
     // Uses the protocol combined with the endpoint for receiving
     // remote procedure calls.
     status = RpcServerUseProtseqEpA(
         (RPC_CSTR)("ncacn_ip_tcp"), // Use TCP/IP protocol.
         RPC_C_PROTSEQ_MAX_REQS_DEFAULT, // Backlog queue length for TCP/IP.
-        (RPC_CSTR)("4748"),         // TCP/IP port to use.
+        (RPC_CSTR)(port),         // TCP/IP port to use.
         NULL);                          // No security.
 
     if (status)

@@ -32,4 +32,6 @@ enum class StateEnum { follower_state, leader_state, candidate_state, unknown_st
 #define INVOKE_TEXT												"INVOKE"
 #define RESULT_TEXT												"RESULT"
 
+#define NONE													-1
+
 
