@@ -1,8 +1,22 @@
 #pragma once
+
+#include "IRole.h"
+#include "RaftTFM_rpc_server.h"          
+#include <thread>
+
+
+
 class RPC_API_Server
 {
 
 public:
-	int receive();
+	RPC_API_Server();
+	~RPC_API_Server();
+	void start();
+	void set_role(IRole* role);
+	int	 receive();
+
+protected:
+	std::thread	thread_receive_;
 };
 

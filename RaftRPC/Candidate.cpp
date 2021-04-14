@@ -49,22 +49,31 @@ void Candidate::send_request_vote_to_all_servers()
 
 					// If the receiver is not equal to sender...
 					if (count != ((Server*)server_)->get_server_id()) {
-						RPC_sockets rpc;
-						rpc.server_id_origin = ((Server*)server_)->get_server_id();
-						rpc.server_id_target = count;
-						rpc.rpc_type = RPCTypeEnum_sockets::rpc_append_request_vote;
-						rpc.rpc_direction = RPCDirection_sockets::rpc_in_invoke;
-						rpc.request_vote.argument_term_ = ((Server*)server_)->get_current_term();				// Candidate's term
-						rpc.request_vote.argument_candidate_id_ = ((Server*)server_)->get_server_id();			// Candidate requesting vote
-						rpc.request_vote.argument_last_log_index_ = ((Server*)server_)->get_last_applied();		// Index of candidate's last log entry (§5.4)
-						rpc.request_vote.argument_last_log_term_ = 0;											// Term of candidate's last log entry (§5.4)
 
-						send(&rpc,
+						int result_term;										// CurrentTerm, for candidate to update itself
+						int result_vote_granted;								// True means candidate received vote    
+
+
+						rpc_api_client_.send_request_vote_rpc(
+							RPCTypeEnum::rpc_append_request_vote,
+							RPCDirection::rpc_in_invoke,
+							((Server*)server_)->get_server_id(),
+							count,
 							BASE_PORT + RECEIVER_PORT + count,
-							std::string(SERVER_TEXT) + "(C)." + std::to_string(((Server*)server_)->get_server_id()),
-							std::string(REQUEST_VOTE_TEXT) + std::string("(") + std::string(INVOKE_TEXT) + std::string(")"),
-							std::string(SERVER_TEXT) + "(F)." + std::to_string(count)
+							((Server*)server_)->get_current_term(),				// Candidate's term
+							((Server*)server_)->get_server_id(),				// Candidate requesting vote
+							((Server*)server_)->get_last_applied(),				// Index of candidate's last log entry (§5.4)
+							0,													// Term of candidate's last log entry (§5.4)
+							&result_term,										// CurrentTerm, for candidate to update itself
+							&result_vote_granted								// True means candidate received vote    
 						);
+																																																						
+						//send(&rpc,
+						//	BASE_PORT + RECEIVER_PORT + count,
+						//	std::string(SERVER_TEXT) + "(C)." + std::to_string(((Server*)server_)->get_server_id()),
+						//	std::string(REQUEST_VOTE_TEXT) + std::string("(") + std::string(INVOKE_TEXT) + std::string(")"),
+						//	std::string(SERVER_TEXT) + "(F)." + std::to_string(count)
+						//);
 					}
 				}
 			}
@@ -275,3 +284,23 @@ void Candidate::dispatch(RPC_sockets* rpc)
 
 	}
 }
+
+
+void Candidate::append_entry_role(
+	/* [in] */ int argument_term_,
+	/* [in] */ int argument_leader_id_,
+	/* [in] */ int argument_prev_log_index_,
+	/* [in] */ int argument_prev_log_term_,
+	/* [in] */ int argument_entries_[1000],
+	/* [in] */ int argument_leader_commit_,
+	/* [out] */ int* result_term_,
+	/* [out] */ int* result_success_) {}
+
+
+void Candidate::request_vote_role(
+	/* [in] */ int argument_term_,
+	/* [in] */ int argument_candidate_id_,
+	/* [in] */ int argument_last_log_index_,
+	/* [in] */ int argument_last_log_term_,
+	/* [out] */ int* result_term_,
+	/* [out] */ int* result_vote_granted_) {}

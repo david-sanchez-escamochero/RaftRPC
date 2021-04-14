@@ -8,14 +8,14 @@ unsigned long long GetTickCount()
 {
 	long long tick; 
 
-	try {
+	//try {
 		using namespace std::chrono;
 		tick = duration_cast<milliseconds>(steady_clock::now().time_since_epoch()).count();
-	}
-	catch (...)
-	{
-		tick = 0;
-	}
+	//}
+	//catch (...)
+	//{
+	//	tick = 0;
+	//}
 	return tick; 
 }
 

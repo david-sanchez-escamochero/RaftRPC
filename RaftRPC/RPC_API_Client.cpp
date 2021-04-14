@@ -2,6 +2,54 @@
 #include <iostream>
 #include "RaftTFM_rpc_client.h"
 #include <string>
+#include "Tracer.h"
+
+
+void RPC_API_Client::send_append_entry_rpc(RPCTypeEnum rpc_type, RPCDirection rpc_direction, int server_id_origin, int server_id_target, int port_target, int argument_term, int argument_leader_id, int argument_prev_log_index, int argument_prev_log_term, int argument_entries[], int argument_leader_commit, int* result_term, int* result_success)
+{
+    //Just for debugging(Because if I do not do this, it does not complile.¿?
+    Tracer::trace(">>>>>[SEND] RPC(append_entry) from S." + std::to_string(server_id_origin) + " to S." + std::to_string(server_id_target) + "[port:" + std::to_string(port_target) + "]\r\n");
+    send_append_entry(
+        // Only Debug
+        rpc_type,
+        rpc_direction,
+        server_id_origin,
+        server_id_target,
+        port_target,
+        //Arguments :
+        argument_term,						// Leader's term
+        argument_leader_id,				// So follower can redirect clients
+        argument_prev_log_index,			// Index of log entry immediately preceding	new ones
+        argument_prev_log_term,			// Term of argument_prev_log_index entry
+        argument_entries,	            // Log entries to store(empty for heartbeat; may send more than one for efficiency)
+        argument_leader_commit,			// Leader’s commitIndex
+        // Results :
+        result_term,						// CurrentTerm, for leader to update itself
+        result_success					// True if follower contained entry matching argument_prev_log_index and argument_prev_log_term
+    );
+}
+void RPC_API_Client::send_request_vote_rpc(RPCTypeEnum rpc_type, RPCDirection rpc_direction, int server_id_origin, int server_id_target, int port_target, int argument_term, int argument_candidate_id, int argument_last_log_index, int argument_last_log_term, int* result_term, int* result_vote_granted)
+{
+    Tracer::trace(">>>>>[SEND] RPC(request_vote) from S." + std::to_string(server_id_origin) + " to S." + std::to_string(server_id_target) + "[port:" + std::to_string(port_target) + "]\r\n");
+    send_request_vote(
+        // Only Debug
+        rpc_type,
+        rpc_direction,
+        server_id_origin,
+        server_id_target,
+        port_target,
+        // Arguments:
+        argument_term,				// Candidate's term
+        argument_candidate_id,		// Candidate requesting vote
+        argument_last_log_index,		// Index of candidate's last log entry (§5.4)
+        argument_last_log_term,		// Term of candidate's last log entry (§5.4)
+        //Results :
+        result_term,				    // CurrentTerm, for candidate to update itself
+        result_vote_granted		    // True means candidate received vote    
+    );
+}
+
+
 
 void RPC_API_Client::send_append_entry(
     // Only Debug
@@ -9,24 +57,30 @@ void RPC_API_Client::send_append_entry(
     RPCDirection rpc_direction,
     int	server_id_origin,
     int	server_id_target,
+    int port_target,
     //Arguments :
-    int	argument_term_,						// Leader's term
-    int	argument_leader_id_,				// So follower can redirect clients
-    int	argument_prev_log_index_,			// Index of log entry immediately preceding	new ones
-    int	argument_prev_log_term_,			// Term of argument_prev_log_index entry
-    int	argument_entries_[],	            // Log entries to store(empty for heartbeat; may send more than one for efficiency)
-    int	argument_leader_commit_,			// Leader’s commitIndex
+    int	argument_term,						// Leader's term
+    int	argument_leader_id,				// So follower can redirect clients
+    int	argument_prev_log_index,			// Index of log entry immediately preceding	new ones
+    int	argument_prev_log_term,			// Term of argument_prev_log_index entry
+    int	argument_entries[],	            // Log entries to store(empty for heartbeat; may send more than one for efficiency)
+    int	argument_leader_commit,			// Leader’s commitIndex
     // Results :
-    int* result_term_,						// CurrentTerm, for leader to update itself
-    int* result_success_					// True if follower contained entry matching argument_prev_log_index and argument_prev_log_term
+    int* result_term,						// CurrentTerm, for leader to update itself
+    int* result_success					// True if follower contained entry matching argument_prev_log_index and argument_prev_log_term
 )
 
 {
+    
+    
+    
+    
+
     RPC_STATUS status;
     RPC_CSTR szStringBinding = NULL;
     
     char port[6];    
-    sprintf_s(port, "%d", server_id_target);    
+    sprintf_s(port, "%d", port_target);    
     
     // Creates a string binding handle.
     // This function is nothing more than a printf.
@@ -68,7 +122,7 @@ void RPC_API_Client::send_append_entry(
             // is used implicitly.
             // Connection is done here.
             
-            rpc_client::append_entry_rpc(hRaftTFMExplicitBinding, argument_term_, argument_leader_id_, argument_prev_log_index_, argument_prev_log_term_, argument_entries_, argument_leader_commit_, result_term_, result_success_);
+            rpc_client::append_entry_rpc(hRaftTFMExplicitBinding, argument_term, argument_leader_id, argument_prev_log_index, argument_prev_log_term, argument_entries, argument_leader_commit, result_term, result_success);
         }
             RpcExcept(1)
         {
@@ -116,6 +170,7 @@ void RPC_API_Client::send_request_vote(
     RPCDirection rpc_direction,
     int	server_id_origin,
     int	server_id_target,
+    int port_target,
     // Arguments:
     int argument_term,				// Candidate's term
     int argument_candidate_id,		// Candidate requesting vote
@@ -130,7 +185,7 @@ void RPC_API_Client::send_request_vote(
     RPC_CSTR szStringBinding = NULL;
 
     char port[6];
-    sprintf_s(port, "%d", server_id_target);
+    sprintf_s(port, "%d", port_target);
 
     // Creates a string binding handle.
     // This function is nothing more than a printf.
@@ -175,7 +230,7 @@ void RPC_API_Client::send_request_vote(
        rpc_client::request_vote_rpc(hRaftTFMExplicitBinding, argument_term,	argument_candidate_id, argument_last_log_index,	argument_last_log_term, result_term, result_vote_granted);
 
     }
-        RpcExcept(1)
+    RpcExcept(1)
     {
         std::cerr << "Runtime reported exception " << RpcExceptionCode()
             << std::endl;
