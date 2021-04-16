@@ -6,8 +6,9 @@
 #include <mutex>
 #include "RPC_API_Server.h"
 #include "RPC_API_Client.h"
+#include <chrono>
 
-
+using namespace std::chrono;
 
 class Candidate : public IRole
 {
@@ -20,13 +21,16 @@ public:
 
 	
 protected:
-	void*		server_;
-	void		send_request_vote_to_all_servers();
-	bool		there_is_leader_;
-	bool		have_to_die_;
-	void		reset_receive_votes();
-	uint32_t	received_votes_;
-	std::mutex	mu_candidate_;
+	void*			server_;
+	void			send_request_vote_to_all_servers();
+	bool			there_is_leader_;
+	bool			have_to_die_;
+	void			reset_receive_votes();
+	int		count_received_votes_;
+	std::mutex		mu_candidate_;
+	bool			received_votes_[NUM_SERVERS];
+	milliseconds	last_time_stam_taken_miliseconds_;
+	bool			term_finished_;
 
 
 	std::thread thread_send_request_vote_to_all_servers_;
@@ -41,7 +45,7 @@ protected:
 
 
 
-	std::condition_variable cv_send_request_vote_to_all_servers_;
+	
 
 
 	// RPC 

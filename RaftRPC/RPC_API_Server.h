@@ -12,8 +12,7 @@ class RPC_API_Server
 public:
 	RPC_API_Server();
 	~RPC_API_Server();
-	void start(int port_receiver);
-	void set_role(IRole* role);
+	void start(IRole* role, int port_receiver);	
 	int	 receive();
 
 protected:

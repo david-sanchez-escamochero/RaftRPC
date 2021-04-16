@@ -7,11 +7,11 @@ class ClientRequest
 {
 public:
 	// Arguments:
-	uint32_t client_id_;
-	uint32_t client_value_;
+	int client_id_;
+	int client_value_;
 	// Results: 
-	uint32_t client_result_;
-	uint32_t client_leader_;
+	int client_result_;
+	int client_leader_;
 };
 
 

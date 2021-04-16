@@ -18,8 +18,8 @@ public:
 
 	RPCTypeEnum_sockets	 rpc_type; 
 	RPCDirection_sockets rpc_direction;
-	uint32_t	 server_id_origin;
-	uint32_t	 server_id_target;
+	int	 server_id_origin;
+	int	 server_id_target;
 
 	//union {
 		AppendEntry append_entry;

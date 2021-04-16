@@ -8,7 +8,7 @@
 Follower::Follower(void* server)
 {	
 	server_											= server;
-	Tracer::trace("(Follower." + std::to_string(((Server*)server_)->get_server_id()) + ") I am a Follower\r\n");
+	Tracer::trace("(Follower." + std::to_string(((Server*)server_)->get_server_id()) + ") I am a Follower\r\n", ServeryTrace::action_trace);
 	have_to_die_									= false;
 	receiving_heartbeats_							= ELECTION_TIME_OUT; // Tries alllowed without receiving heartbeats 
 	last_time_stam_taken_miliseconds_				= duration_cast<milliseconds>(system_clock::now().time_since_epoch());	
@@ -31,7 +31,7 @@ Follower::~Follower()
 void Follower::start()
 {
 	thread_check_candidate_ = std::thread(&Follower::check_if_there_is_candidate_or_leader, this);	
-	rpc_api_server_.start(BASE_PORT + RECEIVER_PORT +((Server*)server_)->get_server_id());
+	rpc_api_server_.start(this, BASE_PORT + RECEIVER_PORT +((Server*)server_)->get_server_id());	
 }
 
 
@@ -45,7 +45,7 @@ void Follower::check_if_there_is_candidate_or_leader()
 			if (!have_to_die_) {
 				milliseconds current_time_stam_taken_miliseconds = duration_cast<milliseconds>(system_clock::now().time_since_epoch());
 
-				Tracer::trace("(Follower." + std::to_string(((Server*)server_)->get_server_id()) + ") Waiting if there is candidate or leader " + std::to_string(count_check_if_there_is_candidate_or_leader_++) + "...\r\n");
+				Tracer::trace("(Follower." + std::to_string(((Server*)server_)->get_server_id()) + ") Waiting if there is candidate or leader " + std::to_string(count_check_if_there_is_candidate_or_leader_++) + "...\r\n", ServeryTrace::warning_trace);
 
 				if ((abs(last_time_stam_taken_miliseconds_.count() - current_time_stam_taken_miliseconds.count())) > TIME_OUT_CHECK_IF_THERE_IS_CANDIDATE_OR_LEADER)
 				{

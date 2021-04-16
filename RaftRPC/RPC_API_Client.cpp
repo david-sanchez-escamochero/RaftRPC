@@ -5,11 +5,13 @@
 #include "Tracer.h"
 
 
-void RPC_API_Client::send_append_entry_rpc(RPCTypeEnum rpc_type, RPCDirection rpc_direction, int server_id_origin, int server_id_target, int port_target, int argument_term, int argument_leader_id, int argument_prev_log_index, int argument_prev_log_term, int argument_entries[], int argument_leader_commit, int* result_term, int* result_success)
+
+
+int RPC_API_Client::send_append_entry_rpc(RPCTypeEnum rpc_type, RPCDirection rpc_direction, int server_id_origin, int server_id_target, int port_target, int argument_term, int argument_leader_id, int argument_prev_log_index, int argument_prev_log_term, int argument_entries[], int argument_leader_commit, int* result_term, int* result_success)
 {
     //Just for debugging(Because if I do not do this, it does not complile.¿?
     Tracer::trace(">>>>>[SEND] RPC(append_entry) from S." + std::to_string(server_id_origin) + " to S." + std::to_string(server_id_target) + "[port:" + std::to_string(port_target) + "]\r\n");
-    send_append_entry(
+    return send_append_entry(
         // Only Debug
         rpc_type,
         rpc_direction,
@@ -28,10 +30,10 @@ void RPC_API_Client::send_append_entry_rpc(RPCTypeEnum rpc_type, RPCDirection rp
         result_success					// True if follower contained entry matching argument_prev_log_index and argument_prev_log_term
     );
 }
-void RPC_API_Client::send_request_vote_rpc(RPCTypeEnum rpc_type, RPCDirection rpc_direction, int server_id_origin, int server_id_target, int port_target, int argument_term, int argument_candidate_id, int argument_last_log_index, int argument_last_log_term, int* result_term, int* result_vote_granted)
+int RPC_API_Client::send_request_vote_rpc(RPCTypeEnum rpc_type, RPCDirection rpc_direction, int server_id_origin, int server_id_target, int port_target, int argument_term, int argument_candidate_id, int argument_last_log_index, int argument_last_log_term, int* result_term, int* result_vote_granted)
 {
     Tracer::trace(">>>>>[SEND] RPC(request_vote) from S." + std::to_string(server_id_origin) + " to S." + std::to_string(server_id_target) + "[port:" + std::to_string(port_target) + "]\r\n");
-    send_request_vote(
+    return send_request_vote(
         // Only Debug
         rpc_type,
         rpc_direction,
@@ -51,7 +53,7 @@ void RPC_API_Client::send_request_vote_rpc(RPCTypeEnum rpc_type, RPCDirection rp
 
 
 
-void RPC_API_Client::send_append_entry(
+int RPC_API_Client::send_append_entry(
     // Only Debug
     RPCTypeEnum	 rpc_type,
     RPCDirection rpc_direction,
@@ -70,12 +72,7 @@ void RPC_API_Client::send_append_entry(
     int* result_success					// True if follower contained entry matching argument_prev_log_index and argument_prev_log_term
 )
 
-{
-    
-    
-    
-    
-
+{      
     RPC_STATUS status;
     RPC_CSTR szStringBinding = NULL;
     
@@ -99,7 +96,7 @@ void RPC_API_Client::send_append_entry(
 
 
         if (status)
-            exit(status);
+            return status;
 
 
         handle_t hRaftTFMExplicitBinding = NULL;
@@ -114,7 +111,7 @@ void RPC_API_Client::send_append_entry(
                                 // handle defined in the IDL file.
 
         if (status)
-            exit(status);
+            return status;
 
         RpcTryExcept
         {
@@ -136,7 +133,7 @@ void RPC_API_Client::send_append_entry(
                 &szStringBinding); // String to be freed.
 
         if (status)
-            exit(status);
+            return status;
 
         // Releases binding handle resources and disconnects from the server.
         status = RpcBindingFree(
@@ -144,8 +141,9 @@ void RPC_API_Client::send_append_entry(
                                 // the IDL file.
 
         if (status)
-            exit(status);
+            return status;
 
+        return NO_ERROR;
 }
 
 
@@ -164,7 +162,7 @@ void __RPC_USER midl_user_free(void* p)
 }
 
 
-void RPC_API_Client::send_request_vote(
+int RPC_API_Client::send_request_vote(
     // Only Debug
     RPCTypeEnum	 rpc_type,
     RPCDirection rpc_direction,
@@ -204,7 +202,7 @@ void RPC_API_Client::send_request_vote(
 
 
     if (status)
-        exit(status);
+        return status;
 
 
     handle_t hRaftTFMExplicitBinding = NULL;
@@ -219,7 +217,7 @@ void RPC_API_Client::send_request_vote(
                             // handle defined in the IDL file.
 
     if (status)
-        exit(status);
+        return status;
 
     RpcTryExcept
     {
@@ -234,6 +232,7 @@ void RPC_API_Client::send_request_vote(
     {
         std::cerr << "Runtime reported exception " << RpcExceptionCode()
             << std::endl;
+        return RpcExceptionCode();
     }
     RpcEndExcept
 
@@ -242,7 +241,7 @@ void RPC_API_Client::send_request_vote(
             &szStringBinding); // String to be freed.
 
     if (status)
-        exit(status);
+        return status;
 
     // Releases binding handle resources and disconnects from the server.
     status = RpcBindingFree(
@@ -250,7 +249,9 @@ void RPC_API_Client::send_request_vote(
                             // the IDL file.
 
     if (status)
-        exit(status);
+        return status;
+
+    return NO_ERROR;
 }
 
 

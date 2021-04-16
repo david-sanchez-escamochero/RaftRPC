@@ -10,7 +10,7 @@
 #define SEMAPHORE_SERVER_DISPATCH		1
 #define SEMAPHORE_SERVER_NEW_STATE		2	
 
-Server::Server(uint32_t server_id)
+Server::Server(int server_id)
 {
 
 	// Persisten state on all servers. 
@@ -55,7 +55,7 @@ void Server::send(RPC_sockets* rpc, unsigned short port, std::string sender, std
 
 void Server::start() 
 {		
-	uint32_t ret = manager_log_.read_log(file_log_name_, &log_, sizeof(log_));
+	int ret = manager_log_.read_log(file_log_name_, &log_, sizeof(log_));
 	if (ret != MANAGER_NO_ERROR) {
 		Tracer::trace("Server::start - FAILED!!! to read " + file_log_name_ +" log, stopping server...\r\n");
 		return;
@@ -73,7 +73,7 @@ void Server::start()
 
 
 	// Start new Rol(Follower at the beginning)
-	set_new_state(StateEnum::candidate_state);							
+	set_new_state(StateEnum::follower_state);							
 
 
 	//receive();
@@ -154,7 +154,7 @@ IRole* Server::get_current_shape_sever(StateEnum state)
 	return role;
 }
 
-uint32_t Server::get_server_id()
+int Server::get_server_id()
 {
 	return server_id_;
 }
@@ -185,7 +185,7 @@ void Server::set_new_state(StateEnum state)
 {			
 	{
 		//std::lock_guard<std::mutex> locker_new_state(mu_new_state_);
-		Tracer::trace("Server(" + std::to_string(server_id_) + ") New state has been requested\r\n");
+		Tracer::trace("Server(" + std::to_string(server_id_) + ") New state has been requested\r\n", ServeryTrace::action_trace);
 		new_state_ = state;
 		semaphore_new_state_.notify(SEMAPHORE_SERVER_NEW_STATE);
 	}
@@ -194,26 +194,26 @@ void Server::set_new_state(StateEnum state)
 void Server::increment_current_term()
 {	
 	current_term_++;
-	Tracer::trace("Server(" + std::to_string(server_id_) + ") Increment term from " + std::to_string(current_term_ - 1) + " to " + std::to_string(current_term_) + "\r\n");
+	Tracer::trace("Server(" + std::to_string(server_id_) + ") Increment term from " + std::to_string(current_term_ - 1) + " to " + std::to_string(current_term_) + "\r\n", ServeryTrace::action_trace);
 }
 
-uint32_t Server::get_current_term()
+int Server::get_current_term()
 {
 	return current_term_;
 }
 
-void Server::set_current_term(uint32_t term)
+void Server::set_current_term(int term)
 {
 	current_term_ = term;
 }
 
 
-uint32_t Server::get_commit_index()
+int Server::get_commit_index()
 {
 	return commit_index_;
 }
 
-uint32_t Server::get_last_applied()
+int Server::get_last_applied()
 {
 	return last_applied_;
 }
@@ -228,7 +228,7 @@ void Server::set_voted_for(int32_t vote_for)
 	voted_for_ = vote_for;
 }
 
-uint32_t  Server::write_log(uint32_t state_machine_command)
+int  Server::write_log(int state_machine_command)
 {
 	// Increment log index; 
 	log_.log_index_++;
@@ -237,7 +237,7 @@ uint32_t  Server::write_log(uint32_t state_machine_command)
 	// Update state machine command. 
 	log_.log_[log_.log_index_].set_state_machime_command(state_machine_command);
 	// Wirte log. 
-	uint32_t ret = manager_log_.write_log(file_log_name_, &log_, sizeof(log_));
+	int ret = manager_log_.write_log(file_log_name_, &log_, sizeof(log_));
 
 	if (ret) {
 		Tracer::trace("Server::write_log - FAILED!!! to write in log, error: " + std::to_string(ret) + "\r\n");
@@ -245,22 +245,22 @@ uint32_t  Server::write_log(uint32_t state_machine_command)
 	return ret;
 }
 
-uint32_t Server::get_log_index()
+int Server::get_log_index()
 {
 	return log_.log_index_;
 }
 
-uint32_t Server::get_term_of_entry_in_log(uint32_t log_index)
+int Server::get_term_of_entry_in_log(int log_index)
 {
 	return log_.log_[log_index].get_term_when_entry_was_received_by_leader();
 }
 
-uint32_t Server::get_current_leader_id()
+int Server::get_current_leader_id()
 {
 	return current_leader_id_;
 }
 
-void Server::set_current_leader_id(uint32_t leader_id)
+void Server::set_current_leader_id(int leader_id)
 {
 	current_leader_id_ = leader_id;
 }

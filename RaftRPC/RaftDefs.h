@@ -12,12 +12,13 @@ enum class StateEnum { follower_state, leader_state, candidate_state, unknown_st
 #define MAJORITY												( ( NUM_SERVERS % 2 ) + 1 ) - 1  // -1 Because I do not have to send message to myself.
 #define ELECTION_TIME_OUT										3//(s) 	A follower receives no communication over a period of time. 	
 #define	MINIMUM_VALUE_RAMDOM_TIME_OUT							150//(ms)
-#define	TIME_OUT_CHECK_IF_THERE_IS_CANDIDATE_OR_LEADER			30000//(ms)
+#define	TIME_OUT_CHECK_IF_THERE_IS_CANDIDATE_OR_LEADER			10000//(ms)
 #define	TIME_OUT_IF_THERE_IS_CANDIDATE_OR_LEADER				1000//(ms)
-#define	TIME_OUT_TERM											10000//(ms)
+#define	TIME_OUT_TERM											30000//(ms)
 #define TIME_OUT_HEART_BEAT										2000//(ms)
 #define TIME_OUT_LEADER_TERM									60000//(ms)
 #define TIME_OUT_WAIT											2000//(ms)
+
 
 
 #define FOLLOWER_TEXT											"FOLLOWER"

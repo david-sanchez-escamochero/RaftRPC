@@ -4,10 +4,12 @@ enum class RPCTypeEnum { rpc_append_entry, rpc_append_request_vote, rpc_append_h
 enum class RPCDirection { rpc_in_invoke, rpc_out_result };
 
 
+// error codes https://docs.microsoft.com/en-us/windows/win32/debug/system-error-codes--1700-3999-
+
 class RPC_API_Client
 {
 private:
-	void send_append_entry(
+	int send_append_entry(
         // Only Debug
         RPCTypeEnum	 rpc_type,
         RPCDirection rpc_direction,
@@ -25,7 +27,7 @@ private:
         int* result_term,						// CurrentTerm, for leader to update itself
         int* result_success					// True if follower contained entry matching argument_prev_log_index and argument_prev_log_term
     );
-	void send_request_vote(
+	int send_request_vote(
         // Only Debug
         RPCTypeEnum	 rpc_type,
         RPCDirection rpc_direction,
@@ -44,7 +46,7 @@ private:
 
 
 public:
-    void send_append_entry_rpc(
+    int send_append_entry_rpc(
         // Only Debug
         RPCTypeEnum	 rpc_type,
         RPCDirection rpc_direction,
@@ -62,7 +64,7 @@ public:
         int* result_term,						// CurrentTerm, for leader to update itself
         int* result_success					// True if follower contained entry matching argument_prev_log_index and argument_prev_log_term
     );
-    void send_request_vote_rpc(
+    int send_request_vote_rpc(
         // Only Debug
         RPCTypeEnum	 rpc_type,
         RPCDirection rpc_direction,

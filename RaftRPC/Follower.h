@@ -31,10 +31,10 @@ protected:
 	
 	
 	void			check_if_there_is_candidate_or_leader();
-	uint32_t		receiving_heartbeats_;		
+	int		receiving_heartbeats_;		
 	milliseconds	last_time_stam_taken_miliseconds_;
 	std::mutex		mu_follower_;
-	uint32_t		count_check_if_there_is_candidate_or_leader_;
+	int		count_check_if_there_is_candidate_or_leader_;
 	std::thread		thread_check_candidate_;
 
 

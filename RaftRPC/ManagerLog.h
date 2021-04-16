@@ -19,7 +19,7 @@ class ManagerLog
 {
 public:
     ManagerLog();
-    uint32_t write_log(std::string file_name, void* log, uint32_t size_to_write);
-    uint32_t read_log(std::string file_name, void* log, uint32_t size_to_read);
+    int write_log(std::string file_name, void* log, int size_to_write);
+    int read_log(std::string file_name, void* log, int size_to_read);
 };
 

@@ -5,7 +5,7 @@
 Leader::Leader(void* server)
 {	
 	server_ = server;
-	Tracer::trace("(Leader." + std::to_string(((Server*)server_)->get_server_id()) + ") I am a LEADER\r\n");
+	Tracer::trace("(Leader." + std::to_string(((Server*)server_)->get_server_id()) + ") I am a LEADER\r\n", ServeryTrace::action_trace);
 
 	have_to_die_		= false;	
 	term_is_not_timeout_= false;
@@ -39,7 +39,7 @@ void Leader::start()
 
 void Leader::check_leader_time_out_to_change_term() 
 {
-	uint32_t count_term = (TIME_OUT_LEADER_TERM / 1000);
+	int count_term = (TIME_OUT_LEADER_TERM / 1000);
 	milliseconds last_time_stamp_taken_miliseconds_ = duration_cast<milliseconds>(system_clock::now().time_since_epoch());
 
 	while (!have_to_die_) {
@@ -69,7 +69,7 @@ void Leader::send_heart_beat_all_servers()
 	while ((!term_is_not_timeout_) && (!have_to_die_))
 	{
 		// Send RPC's(Heart beat)in parallel to each of the other servers in the cluster. 
-		for (uint32_t count = 0; count < NUM_SERVERS; count++)
+		for (int count = 0; count < NUM_SERVERS; count++)
 		{
 			{
 				std::lock_guard<std::mutex> locker_leader(mu_leader_);
@@ -147,7 +147,7 @@ void Leader::dispatch_append_heart_beat(RPC_sockets* rpc)
 		// TODO:
 	}
 	else if (rpc->rpc_direction == RPCDirection_sockets::rpc_out_result) {
-		if(rpc->append_entry.result_success_ == (uint32_t)true)
+		if(rpc->append_entry.result_success_ == (int)true)
 			Tracer::trace("(Leader." + std::to_string(((Server*)server_)->get_server_id()) + ") ACK heart beat Server\r\n");
 		else 
 			Tracer::trace("(Leader." + std::to_string(((Server*)server_)->get_server_id()) + ") FAILED!!! ACK heart beat Server\r\n");
@@ -182,10 +182,10 @@ void Leader::dispatch_client_request_value(RPC_sockets* rpc)
 		// Write to log.
 
 		
-		uint32_t client_value = rpc->client_request.client_value_;
-		uint32_t ret = ((Server*)server_)->write_log(client_value);
+		int client_value = rpc->client_request.client_value_;
+		int ret = ((Server*)server_)->write_log(client_value);
 		if (ret == MANAGER_NO_ERROR) {
-			for (uint32_t num_server = 0; num_server < NUM_SERVERS; num_server++) {
+			for (int num_server = 0; num_server < NUM_SERVERS; num_server++) {
 				RPC_sockets rpc;
 				rpc.rpc_type = RPCTypeEnum_sockets::rpc_append_entry;
 				rpc.rpc_direction = RPCDirection_sockets::rpc_in_invoke;

@@ -40,16 +40,13 @@ RPC_API_Server::~RPC_API_Server()
         thread_receive_.join();
 }
 
-void RPC_API_Server::start(int port_receiver)
+void RPC_API_Server::start(IRole* role, int port_receiver)
 {    
     port_receiver_ = port_receiver;
+    role_ = role;
     thread_receive_ = std::thread(&RPC_API_Server::receive, this);
 }
 
-void RPC_API_Server::set_role(IRole* role)
-{
-    role_ = role;
-}
 
 
 

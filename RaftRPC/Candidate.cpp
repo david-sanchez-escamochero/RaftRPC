@@ -1,21 +1,25 @@
 #include "Candidate.h"
 #include "Tracer.h"
 
+
 Candidate::Candidate(void* server)
 {	
 	server_ = server;	
-	Tracer::trace("(Candidate." + std::to_string(((Server*)server_)->get_server_id()) + ") I am a CANDIDATE\r\n");
-	there_is_leader_		= false;
-	have_to_die_			= false;
-	received_votes_			= 1; // Starts in 1, because we dont send messages to myself. 	
+	Tracer::trace("(Candidate." + std::to_string(((Server*)server_)->get_server_id()) + ") I am a CANDIDATE\r\n", ServeryTrace::action_trace);
+	there_is_leader_					= false;
+	have_to_die_						= false;
+	count_received_votes_				= 1; // Starts in 1, because we dont send messages to myself. 	
 	((Server*)server_)->increment_current_term();
+	last_time_stam_taken_miliseconds_	= duration_cast<milliseconds>(system_clock::now().time_since_epoch());
+	term_finished_						= false;
+	
+	// At the beginning nobody has sent a vote. 
+	memset(received_votes_, false, sizeof(received_votes_));
 }
 
 Candidate::~Candidate()
 {
-	have_to_die_ = true;
-	cv_send_request_vote_to_all_servers_.notify_all();
-
+	have_to_die_ = true;	
 
 	Tracer::trace("(Candidate." + std::to_string(((Server*)server_)->get_server_id()) + ") Destroying...\r\n");
 	if (thread_send_request_vote_to_all_servers_.joinable())
@@ -31,77 +35,111 @@ void Candidate::start()
 
 void Candidate::reset_receive_votes() 
 {
-	received_votes_ = 0; 
+	count_received_votes_ = 0; 
 }
 
 void Candidate::send_request_vote_to_all_servers() 
 {
-	while  ( (!there_is_leader_) && (!have_to_die_) ) 
-	{						
-		// Send RPC's(Request vote) in parallel to each of the other servers in the cluster. 
-		for (uint32_t count = 0; count < NUM_SERVERS; count++) 
-		{
+	while ((!there_is_leader_) && (!have_to_die_)) {
+
+		term_finished_ = false;
+
+		while ((!there_is_leader_) && (!have_to_die_) && (!term_finished_))
+		{			
+			// Send RPC's(Request vote) in parallel to each of the other servers in the cluster. 
+			for (int count = 0; ( (count < NUM_SERVERS) && (!received_votes_[count]) && (!there_is_leader_) && (!have_to_die_) && (!term_finished_) ); count++)
 			{
-				std::lock_guard<std::mutex> locker_candidate(mu_candidate_);
-				
+				milliseconds current_time_stam_taken_miliseconds = duration_cast<milliseconds>(system_clock::now().time_since_epoch());
+				{
+					std::lock_guard<std::mutex> locker_candidate(mu_candidate_);
 
-				if ((!there_is_leader_) && (!have_to_die_)) {
+					if ((!there_is_leader_) && (!have_to_die_)) {
 
-					// If the receiver is not equal to sender...
-					if (count != ((Server*)server_)->get_server_id()) {
+						// If the receiver is not equal to sender...
+						if (count != ((Server*)server_)->get_server_id()) {
 
-						int result_term;										// CurrentTerm, for candidate to update itself
-						int result_vote_granted;								// True means candidate received vote    
+							int result_term;										// CurrentTerm, for candidate to update itself
+							int result_vote_granted;								// True means candidate received vote    
 
 
-						rpc_api_client_.send_request_vote_rpc(
-							RPCTypeEnum::rpc_append_request_vote,
-							RPCDirection::rpc_in_invoke,
-							((Server*)server_)->get_server_id(),
-							count,
-							BASE_PORT + RECEIVER_PORT + count,
-							((Server*)server_)->get_current_term(),				// Candidate's term
-							((Server*)server_)->get_server_id(),				// Candidate requesting vote
-							((Server*)server_)->get_last_applied(),				// Index of candidate's last log entry (§5.4)
-							0,													// Term of candidate's last log entry (§5.4)
-							&result_term,										// CurrentTerm, for candidate to update itself
-							&result_vote_granted								// True means candidate received vote    
-						);
-																																																						
-						//send(&rpc,
-						//	BASE_PORT + RECEIVER_PORT + count,
-						//	std::string(SERVER_TEXT) + "(C)." + std::to_string(((Server*)server_)->get_server_id()),
-						//	std::string(REQUEST_VOTE_TEXT) + std::string("(") + std::string(INVOKE_TEXT) + std::string(")"),
-						//	std::string(SERVER_TEXT) + "(F)." + std::to_string(count)
-						//);
+							int status = rpc_api_client_.send_request_vote_rpc(
+								RPCTypeEnum::rpc_append_request_vote,
+								RPCDirection::rpc_in_invoke,
+								((Server*)server_)->get_server_id(),
+								count,
+								BASE_PORT + RECEIVER_PORT + count,
+								((Server*)server_)->get_current_term(),				// Candidate's term
+								((Server*)server_)->get_server_id(),				// Candidate requesting vote
+								((Server*)server_)->get_last_applied(),				// Index of candidate's last log entry (§5.4)
+								0,													// Term of candidate's last log entry (§5.4)
+								&result_term,										// CurrentTerm, for candidate to update itself
+								&result_vote_granted								// True means candidate received vote    
+							);
+
+							if (status) {
+								Tracer::trace("(Candidate." + std::to_string(((Server*)server_)->get_server_id()) + ") Failed to send request vote error: " + std::to_string(status) + "\r\n", ServeryTrace::error_trace);
+							}
+							else {
+								// And its terms is equal or highest than mine... 
+								if (result_term >= ((Server*)server_)->get_current_term()) {
+									have_to_die_ = true;
+									there_is_leader_ = true;
+									Tracer::trace("(Candidate." + std::to_string(((Server*)server_)->get_server_id()) + ") [Accepted]received an request_vote[term:" + std::to_string(result_term) + " >= current_term:" + std::to_string(((Server*)server_)->get_current_term()) + "]\r\n");
+									// Inform server that state has changed to follower.  
+									((Server*)server_)->set_new_state(StateEnum::follower_state);
+								}
+								else
+								{
+									if (result_vote_granted == (int)true) {
+										count_received_votes_++;
+										// If I wins election. 	
+										if (count_received_votes_ >= MAJORITY) {
+											Tracer::trace("(Candidate." + std::to_string(((Server*)server_)->get_server_id()) + ") I have received just mayority of request vote: " + std::to_string(count_received_votes_) + "\r\n");
+											((Server*)server_)->set_new_state(StateEnum::leader_state);
+											there_is_leader_ = true;
+										}
+									}
+									// If I was rejected. 
+									else {
+										Tracer::trace("(Candidate." + std::to_string(((Server*)server_)->get_server_id()) + ") Rejected request voted\r\n");
+									}
+								}
+							}
+						}
 					}
+				}
+
+
+				if ((abs(last_time_stam_taken_miliseconds_.count() - current_time_stam_taken_miliseconds.count())) > TIME_OUT_TERM)
+				{
+					Tracer::trace("(Candidate." + std::to_string(((Server*)server_)->get_server_id()) + ") Time out without being Leader\r\n");
+					term_finished_ = true;
+				}
+				else {
+					Tracer::trace("(Candidate." + std::to_string(((Server*)server_)->get_server_id()) + ") Time out term: " + std::to_string((abs(last_time_stam_taken_miliseconds_.count() - current_time_stam_taken_miliseconds.count()))) + "ms > " + std::to_string(TIME_OUT_TERM)+ "\r\n", ServeryTrace::warning_trace);
 				}
 			}
 		}
 
-		{			
-			std::mutex mtx;
-			std::unique_lock<std::mutex> lck(mtx);
-			cv_send_request_vote_to_all_servers_.wait_for(lck, std::chrono::milliseconds(TIME_OUT_TERM));
-		}
-
-		
 		{
 			//std::lock_guard<std::mutex> locker_candidate(mu_candidate_);
 			if ((!there_is_leader_) && (!have_to_die_)) {
 				// Increments term. 
 				((Server*)server_)->increment_current_term();
 				// Reset received votes. 
-				received_votes_ = 0;
+				count_received_votes_ = 0;
+				memset(received_votes_, false, sizeof(received_votes_));
 				// wait ramdomly. 
 				/* initialize random seed: */
 				srand((unsigned int)time(NULL));
 				// 150-300(ms). 
-				uint32_t ramdom_timeout = ( rand() % MINIMUM_VALUE_RAMDOM_TIME_OUT ) + MINIMUM_VALUE_RAMDOM_TIME_OUT;
+				int ramdom_timeout = (rand() % MINIMUM_VALUE_RAMDOM_TIME_OUT) + MINIMUM_VALUE_RAMDOM_TIME_OUT;
 				std::this_thread::sleep_for(std::chrono::milliseconds(ramdom_timeout));
+				last_time_stam_taken_miliseconds_ = duration_cast<milliseconds>(system_clock::now().time_since_epoch());
 			}
 		}
 	}
+	
 	Tracer::trace("(Candidate." + std::to_string(((Server*)server_)->get_server_id()) + ") send_request_vote_to_all_servers FINISHED.\r\n");
 }
 
@@ -197,10 +235,10 @@ void Candidate::dispatch_request_vote(RPC_sockets* rpc)
 	else if ((rpc->rpc_direction == RPCDirection_sockets::rpc_out_result)) {
 		// If someone voted for me. 
 		if ((bool)rpc->request_vote.result_term_ == true) {
-			received_votes_++;
+			count_received_votes_++;
 			// If I wins election. 	
-			if (received_votes_ >= MAJORITY) {
-				Tracer::trace("(Candidate." + std::to_string(((Server*)server_)->get_server_id()) + ") I have received just mayority of request vote: " + std::to_string(received_votes_) + "\r\n");
+			if (count_received_votes_ >= MAJORITY) {
+				Tracer::trace("(Candidate." + std::to_string(((Server*)server_)->get_server_id()) + ") I have received just mayority of request vote: " + std::to_string(count_received_votes_) + "\r\n");
 				((Server*)server_)->set_new_state(StateEnum::leader_state);
 				there_is_leader_ = true;
 			}			

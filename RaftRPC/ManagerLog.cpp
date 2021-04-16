@@ -8,9 +8,9 @@ ManagerLog::ManagerLog()
 
 }
 
-uint32_t ManagerLog::write_log(std::string file_name, void* log, uint32_t size_to_write)
+int ManagerLog::write_log(std::string file_name, void* log, int size_to_write)
 {
-    uint32_t ret = MANAGER_NO_ERROR;
+    int ret = MANAGER_NO_ERROR;
     ofstream rlog(file_name, ios::out | ios::binary);
     if (!rlog) {
         Tracer::trace("ManagerLog::write_log - FAILED!!! Cannot open file: " + file_name + ".\r\n");
@@ -31,9 +31,9 @@ uint32_t ManagerLog::write_log(std::string file_name, void* log, uint32_t size_t
     return ret;
 }
 
-uint32_t ManagerLog::read_log(std::string file_name, void* log, uint32_t size_to_read)
+int ManagerLog::read_log(std::string file_name, void* log, int size_to_read)
 {
-    uint32_t ret = MANAGER_NO_ERROR;
+    int ret = MANAGER_NO_ERROR;
     ifstream rlog(file_name, ios::in | ios::binary);
     if (!rlog) {
         Tracer::trace("ManagerLog::read_log - FAILED!!! Cannot open file: " + file_name + ".\r\n");
