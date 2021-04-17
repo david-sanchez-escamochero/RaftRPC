@@ -48,24 +48,24 @@ void Leader::send_heart_beat_all_servers()
 
 					// If the receiver is not equal to sender...
 					if (count != ((Server*)server_)->get_server_id()) {
-						RPC_sockets rpc;
-						rpc.server_id_origin = ((Server*)server_)->get_server_id();
-						rpc.server_id_target = count;
-						rpc.rpc_type = RPCTypeEnum_sockets::rpc_append_heart_beat;
-						rpc.rpc_direction = RPCDirection_sockets::rpc_in_invoke;
-						rpc.append_entry.argument_term_ = ((Server*)server_)->get_current_term();															// Leader's term
-						rpc.append_entry.argument_leader_id_ = ((Server*)server_)->get_server_id();															// So follower can redirect clients
-						rpc.append_entry.argument_prev_log_index_ = ((Server*)server_)->get_log_index() - 1;												// Index of log entry immediately preceding	new ones
-						rpc.append_entry.argument_prev_log_term_ = ((Server*)server_)->get_term_of_entry_in_log(((Server*)server_)->get_log_index() - 1);	// Term of argument_prev_log_index entry
-						rpc.append_entry.argument_entries_[0] = NONE;																							// Log entries to store(empty for heartbeat; may send more than one for efficiency)
-						rpc.append_entry.argument_leader_commit_ = ((Server*)server_)->get_commit_index();													// Leader’s commitIndex
 
+						int result_term;
+						int result_success;
 
-						send(&rpc,
+						rpc_api_client_.send_append_entry_rpc(
+							RPCTypeEnum::rpc_append_heart_beat,
+							RPCDirection::rpc_in_invoke,
+							((Server*)server_)->get_server_id(),
+							count,
 							BASE_PORT + RECEIVER_PORT + count,
-							std::string(SERVER_TEXT) + "(L)." + std::to_string(((Server*)server_)->get_server_id()),
-							std::string(HEART_BEAT_TEXT) + std::string("(") + std::string(INVOKE_TEXT) + std::string(")"),
-							std::string(SERVER_TEXT) + "(ALL)." + std::to_string(count)
+							((Server*)server_)->get_current_term(),														// Leader's term
+							((Server*)server_)->get_server_id(),														// So follower can redirect clients
+							((Server*)server_)->get_log_index() - 1,													// Index of log entry immediately preceding	new ones
+							((Server*)server_)->get_term_of_entry_in_log(((Server*)server_)->get_log_index() - 1),		// Term of argument_prev_log_index entry
+							NULL,																						// Log entries to store(empty for heartbeat; may send more than one for efficiency)
+							((Server*)server_)->get_commit_index(),														// Leader’s commitIndex
+							&result_term,
+							&result_success
 						);
 						Tracer::trace("(Leader." + std::to_string(((Server*)server_)->get_server_id()) + ") Sent Heart-beat to Server." + std::to_string(count)+ "\r\n");
 					}
