@@ -6,13 +6,14 @@
 
 
 
+
 class RPC_API_Server
 {
 
 public:
 	RPC_API_Server();
 	~RPC_API_Server();
-	void start(IRole* role, int port_receiver);	
+	void start(void* server, int port_receiver);	
 	int	 receive();
 	void receive_rpc();
 

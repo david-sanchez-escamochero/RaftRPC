@@ -3,7 +3,7 @@
 #include "Tracer.h"
 #include <string>
 #include "RaftUtils.h"
-#include "RPC_API_Server.h"
+
 
 
 
@@ -71,7 +71,7 @@ void Server::start()
 	connector_ = get_current_shape_sever(current_state_);
 	if (connector_) {
 		connector_->start();
-		rpc_api_server_.start(connector_, BASE_PORT + RECEIVER_PORT + get_server_id());
+		rpc_api_server_.start(this, BASE_PORT + RECEIVER_PORT + get_server_id());
 	}
 
 
@@ -315,4 +315,45 @@ int Server::send_request_vote_rpc(	RPCTypeEnum rpc_type,
 		argument_last_log_term,
 		result_term,
 		result_vote_granted);
+}
+
+void Server::append_entry_server(
+	/* [in] */ int argument_term,
+	/* [in] */ int argument_leader_id,
+	/* [in] */ int argument_prev_log_index,
+	/* [in] */ int argument_prev_log_term,
+	/* [in] */ int argument_entries[],
+	/* [in] */ int argument_leader_commit,
+	/* [out] */ int* result_term,
+	/* [out] */ int* result_success) {
+		{
+			std::lock_guard<std::mutex> locker(mu_server_);
+			connector_->append_entry_role(argument_term,
+				argument_leader_id,
+				argument_prev_log_index,
+				argument_prev_log_term,
+				argument_entries,
+				argument_leader_commit,
+				result_term,
+				result_success);
+		}
+}
+
+
+void Server::request_vote_server(
+	/* [in] */ int argument_term,
+	/* [in] */ int argument_candidate_id,
+	/* [in] */ int argument_last_log_index,
+	/* [in] */ int argument_last_log_term,
+	/* [out] */ int* result_term,
+	/* [out] */ int* result_vote_granted) {
+		{
+			std::lock_guard<std::mutex> locker(mu_server_);
+			connector_->request_vote_role(argument_term,
+				argument_candidate_id,
+				argument_last_log_index,
+				argument_last_log_term,
+				result_term,
+				result_vote_granted);
+		}
 }

@@ -10,7 +10,8 @@
 #include "Semaphore.h"
 #include <queue>
 #include "ManagerLog.h"
-
+#include "RPC_API_Server.h"
+#include "RPC_API_Client.h"
 
 
 
@@ -92,6 +93,24 @@ public:
 		int* result_vote_granted		    // True means candidate received vote    
 	);
 
+	void append_entry_server(
+		/* [in] */ int argument_term,
+		/* [in] */ int argument_leader_id,
+		/* [in] */ int argument_prev_log_index,
+		/* [in] */ int argument_prev_log_term,
+		/* [in] */ int argument_entries[],
+		/* [in] */ int argument_leader_commit,
+		/* [out] */ int* result_term,
+		/* [out] */ int* result_success);
+
+
+	void request_vote_server(
+		/* [in] */ int argument_term,
+		/* [in] */ int argument_candidate_id,
+		/* [in] */ int argument_last_log_index,
+		/* [in] */ int argument_last_log_term,
+		/* [out] */ int* result_term,
+		/* [out] */ int* result_vote_granted);
 
 
 protected:

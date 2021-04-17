@@ -1,5 +1,6 @@
 #include "RPC_API_Server.h"
 #include "Tracer.h"
+#include "Server.h"
 
 // ServerRPC.cpp : This file contains the 'main' function. Program execution begins and ends there.
 //
@@ -8,13 +9,13 @@
 #include <iostream>
 
 
-IRole* role_ = nullptr;
+void* server_ = nullptr;
 
 // Server function.
 
 RPC_API_Server::RPC_API_Server()
 {    
-    role_ = nullptr;
+    server_ = nullptr;
     port_receiver_ = NONE;    
 }
 
@@ -40,10 +41,10 @@ RPC_API_Server::~RPC_API_Server()
     }    
 }
 
-void RPC_API_Server::start(IRole* role, int port_receiver)
+void RPC_API_Server::start(void* server, int port_receiver)
 {    
     port_receiver_ = port_receiver;
-    role_ = role;    
+    server_ = server;    
 }
 
 
@@ -60,8 +61,8 @@ void rpc_server::append_entry_rpc_server(
     /* [out] */ int* result_term_,
     /* [out] */ int* result_success_)
 {
-    if(role_)
-        role_->append_entry_role(
+    if(server_)
+        ((Server*)server_)->append_entry_server(
                             argument_term_,
                             argument_leader_id_,
                             argument_prev_log_index_,
@@ -82,8 +83,8 @@ void rpc_server::request_vote_rpc_server(
     /* [out] */ int* result_term_,
     /* [out] */ int* result_vote_granted_)
 {
-    if (role_)
-        role_->request_vote_role(
+    if (server_)
+        ((Server*)server_)->request_vote_server(
                             argument_term_,
                             argument_candidate_id_,
                             argument_last_log_index_,
