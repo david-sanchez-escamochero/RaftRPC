@@ -3,7 +3,7 @@
 #include "Tracer.h"
 #include <string>
 #include "RaftUtils.h"
-
+#include "RPC_API_Server.h"
 
 
 
@@ -67,17 +67,24 @@ void Server::start()
 	// Start server thread. 
 	//thread_server_dispatch_ = std::thread(&Server::dispatch, this);	
 
+	current_state_ = StateEnum::follower_state;
+	connector_ = get_current_shape_sever(current_state_);
+	if (connector_) {
+		connector_->start();
+		rpc_api_server_.start(connector_, BASE_PORT + RECEIVER_PORT + get_server_id());
+	}
+
+
+
 	// Start server check new state
 	thread_check_new_state_ = std::thread(&Server::check_new_state, this);
 	
 
-
 	// Start new Rol(Follower at the beginning)
-	set_new_state(StateEnum::follower_state);							
+	//set_new_state(StateEnum::follower_state);							
 
 
-	//receive();
-	keep_alive();
+	receive();	
 }
 
 
@@ -100,30 +107,18 @@ void Server::dispatch()
 	}
 }
 
-void Server::keep_alive()
-{
-	while (true) {
-		std::this_thread::sleep_for(std::chrono::milliseconds(5000));
-	}	
-}
-
-
-void* Server::receive()
-{
-	while (!have_to_die_) {
-		RPC_sockets rpc;		
-		int error = communication_.receiveMessage( &rpc, BASE_PORT + RECEIVER_PORT + server_id_, std::string( SERVER_TEXT ) + std::string( "." ) + std::to_string( get_server_id() ) );
-
-		if (error) {
-			Tracer::trace("Follower::receive - FAILED!!!  - error" + std::to_string(error) + "\r\n");
-		}
-		else {
-			int xx = sizeof(rpc);
-			queue_.push(rpc);
-			semaphore_dispatch_.notify(SEMAPHORE_SERVER_DISPATCH);
+void Server::receive()
+{	
+	while (!have_to_die_)
+	{
+		int error = rpc_api_server_.receive();
+		if (error != NONE) {
+			Tracer::trace("RPC_API_Server::receive_rpc error:" + std::to_string(error) + "\r\n");
+			if (!have_to_die_) {
+				std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+			}
 		}
 	}
-	return nullptr;
 }
 
 IRole* Server::get_current_shape_sever(StateEnum state)
@@ -150,7 +145,7 @@ IRole* Server::get_current_shape_sever(StateEnum state)
 		Tracer::trace("Server::get_current_shape_sever -  FAILED!!! Unknow state:" + std::to_string(static_cast<int>(state)) + "%d\r\n");
 		role = NULL;
 	}
-
+	
 	return role;
 }
 
@@ -172,8 +167,10 @@ void Server::check_new_state()
 					Tracer::trace("Server(" + std::to_string(server_id_) + ") State changes from " + RaftUtils::parse_state_to_string(current_state_) + " to " + RaftUtils::parse_state_to_string(new_state_) + "\r\n", SeverityTrace::change_status_trace);
 					current_state_ = new_state_;
 					connector_ = get_current_shape_sever(current_state_);
-
-					connector_->start();
+					if (connector_) {
+						connector_->start();
+						rpc_api_server_.start(connector_, BASE_PORT + RECEIVER_PORT + get_server_id());
+					}
 				}
 			}
 		}

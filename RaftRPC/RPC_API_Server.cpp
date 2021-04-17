@@ -1,5 +1,5 @@
 #include "RPC_API_Server.h"
-
+#include "Tracer.h"
 
 // ServerRPC.cpp : This file contains the 'main' function. Program execution begins and ends there.
 //
@@ -15,36 +15,35 @@ IRole* role_ = nullptr;
 RPC_API_Server::RPC_API_Server()
 {    
     role_ = nullptr;
-    port_receiver_ = NONE;
+    port_receiver_ = NONE;    
 }
 
 RPC_API_Server::~RPC_API_Server()
 {
     RPC_STATUS status;
+    have_to_die_ = true;                    
 
     status = RpcMgmtStopServerListening(NULL);
 
     if (status)
     {
+        printf("Muy chungo!!!!");
         exit(status);
     }
 
-    status = RpcServerUnregisterIf(NULL, NULL, FALSE);
+    status = RpcServerUnregisterIf(rpc_server::RaftTFM_v1_0_s_ifspec, NULL, FALSE);
 
     if (status)
     {
+        printf("Super chungo!!!!");
         exit(status);
-    }
-
-    if (thread_receive_.joinable())
-        thread_receive_.join();
+    }    
 }
 
 void RPC_API_Server::start(IRole* role, int port_receiver)
 {    
     port_receiver_ = port_receiver;
-    role_ = role;
-    thread_receive_ = std::thread(&RPC_API_Server::receive, this);
+    role_ = role;    
 }
 
 
@@ -99,9 +98,23 @@ RPC_STATUS CALLBACK SecurityCallback(RPC_IF_HANDLE /*hInterface*/, void* /*pBind
     return RPC_S_OK; // Always allow anyone.
 }
 
+void RPC_API_Server::receive_rpc() 
+{
+    while (!have_to_die_) 
+    {        
+        int error = receive();
+        if (error != NONE) {
+            Tracer::trace("RPC_API_Server::receive_rpc error:" + std::to_string(error)+"\r\n");
+            if (!have_to_die_) {
+                std::this_thread::sleep_for(std::chrono::milliseconds(5000));
+            }
+        }
+    }
+}
+
 
 int RPC_API_Server::receive()
-{
+{    
     printf("RPC receiving...\r\n");
 
     RPC_STATUS status;
@@ -119,7 +132,7 @@ int RPC_API_Server::receive()
         NULL);                          // No security.
 
     if (status)
-        exit(status);
+        return status;
 
     // Registers the Example1 interface.
     status = RpcServerRegisterIf2(
@@ -132,7 +145,7 @@ int RPC_API_Server::receive()
         SecurityCallback);                   // Naive security callback.
 
     if (status)
-        exit(status);
+        return status;
 
     // Start to listen for remote procedure
     // calls for all registered interfaces.
@@ -144,6 +157,8 @@ int RPC_API_Server::receive()
         FALSE);                              // Start listening now.
 
     if (status)
-        exit(status);
+        return status;
+
+    return NO_ERROR;
 }
 

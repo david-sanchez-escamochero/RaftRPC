@@ -21,9 +21,6 @@ Leader::~Leader()
 	if (thread_send_heart_beat_all_servers_.joinable())
 		thread_send_heart_beat_all_servers_.join();
 
-	//if (thread_check_leader_time_out_to_change_term_.joinable())
-	//	thread_check_leader_time_out_to_change_term_.join();
-
 	Tracer::trace("(Leader." + std::to_string(((Server*)server_)->get_server_id()) + ") Destroyed...\r\n");
 }
 
@@ -33,36 +30,8 @@ void Leader::start()
 	((Server*)server_)->set_current_leader_id(((Server*)server_)->get_server_id());											
 
 	thread_send_heart_beat_all_servers_ = std::thread(&Leader::send_heart_beat_all_servers, this);
-
-	/*thread_check_leader_time_out_to_change_term_ = std::thread(&Leader::check_leader_time_out_to_change_term, this);*/
+		
 }
-
-//void Leader::check_leader_time_out_to_change_term() 
-//{
-//	int count_term = (TIME_OUT_LEADER_TERM / 1000);
-//	milliseconds last_time_stamp_taken_miliseconds_ = duration_cast<milliseconds>(system_clock::now().time_since_epoch());
-//
-//	while (!have_to_die_) {
-//		{
-//			std::lock_guard<std::mutex> locker_leader(mu_leader_);
-//			milliseconds current_time_stam_taken_miliseconds = duration_cast<milliseconds>(system_clock::now().time_since_epoch());
-//
-//			count_term = count_term - (TIME_OUT_WAIT / 1000);
-//
-//			Tracer::trace("(Leader." + std::to_string(((Server*)server_)->get_server_id()) + ") Count term["+std::to_string(TIME_OUT_LEADER_TERM/1000)+"]:" + std::to_string(count_term) + " \r\n");
-//
-//			if ((abs(last_time_stamp_taken_miliseconds_.count() - current_time_stam_taken_miliseconds.count())) > TIME_OUT_LEADER_TERM) {
-//				Tracer::trace("(Leader." + std::to_string(((Server*)server_)->get_server_id()) + ") TERM was finished\r\n");
-//				// Inform server that state has changed to follower.  
-//				((Server*)server_)->set_new_state(StateEnum::follower_state);
-//			}
-//			
-//		}
-//		std::this_thread::sleep_for(std::chrono::milliseconds(TIME_OUT_WAIT));
-//	}
-//}
-
-
 
 void Leader::send_heart_beat_all_servers() 
 {

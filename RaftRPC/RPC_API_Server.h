@@ -14,9 +14,10 @@ public:
 	~RPC_API_Server();
 	void start(IRole* role, int port_receiver);	
 	int	 receive();
+	void receive_rpc();
 
-protected:
-	std::thread	thread_receive_;
-	int			port_receiver_;
+protected:	
+	int			port_receiver_;	
+	bool		have_to_die_;
 };
 

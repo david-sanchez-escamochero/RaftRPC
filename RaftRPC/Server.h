@@ -27,11 +27,12 @@ public:
 	Server(int server_id);
 	~Server();
 	void		send(RPC_sockets* rpc, unsigned short port, std::string sender, std::string action, std::string receiver);
-	void*		receive();
+	void		receive();
 	void		start();
 	IRole* get_current_shape_sever(StateEnum state);
 	int    get_server_id();
 	void		set_new_state(StateEnum state);
+	
 	std::mutex	mu_server_;
 	void		increment_current_term();
 
@@ -89,7 +90,7 @@ private:
 	std::mutex		mu_new_state_;
 	ManagerLog		manager_log_;
 	std::string		file_log_name_;
-
-	void			keep_alive();
+	
+	RPC_API_Server  rpc_api_server_;
 };
 

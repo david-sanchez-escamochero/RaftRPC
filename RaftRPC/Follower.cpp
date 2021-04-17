@@ -30,8 +30,7 @@ Follower::~Follower()
 
 void Follower::start()
 {
-	thread_check_candidate_ = std::thread(&Follower::check_if_there_is_candidate_or_leader, this);	
-	rpc_api_server_.start(this, BASE_PORT + RECEIVER_PORT +((Server*)server_)->get_server_id());	
+	thread_check_candidate_ = std::thread(&Follower::check_if_there_is_candidate_or_leader, this);		
 }
 
 

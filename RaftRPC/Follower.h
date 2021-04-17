@@ -8,7 +8,6 @@
 #include <queue>
 #include <chrono>
 #include <mutex>
-#include "RPC_API_Server.h"
 #include "RPC_API_Client.h"
 
 using namespace std::chrono;
@@ -19,7 +18,7 @@ public:
 	Follower(void* server);
 	~Follower();
 	void send(RPC_sockets* rpc, unsigned short port, std::string sender, std::string action, std::string receiver);
-	void receive(RPC_sockets *rpc);
+	void receive(RPC_sockets *rpc);	
 	void start();
 
 protected:
@@ -49,8 +48,7 @@ protected:
 
 
 	// RPC 
-	RPC_API_Client	rpc_api_client_;
-	RPC_API_Server  rpc_api_server_;
+	RPC_API_Client	rpc_api_client_;	
 	void append_entry_role(
 		/* [in] */ int argument_term,
 		/* [in] */ int argument_leader_id,

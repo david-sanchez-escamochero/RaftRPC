@@ -2,11 +2,11 @@
 #include <thread>
 #include <chrono>
 #include <ctime> 
-
+#include <windows.h>
 
  
 
-unsigned long long GetTickCount()
+unsigned long long GetTickCountTrace()
 {
 	long long tick; 
 
@@ -44,7 +44,7 @@ void Tracer::trace(std::string str_log, SeverityTrace severity)
 		
 		static int count_line_ = 0;
 		//std::lock_guard<std::mutex> guard(mu_); // RAII
-		str_log = std::to_string(count_line_++) + ".-" + "[" + std::to_string(GetTickCount()) + "]" + str_log;
+		str_log = std::to_string(count_line_++) + ".-" + "[" + std::to_string(GetTickCountTrace()) + "]" + str_log;
 		printf(str_log.c_str());
 
 		

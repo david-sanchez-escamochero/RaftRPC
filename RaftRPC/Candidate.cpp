@@ -30,6 +30,8 @@ Candidate::~Candidate()
 void Candidate::start()
 {
 	thread_send_request_vote_to_all_servers_ = std::thread(&Candidate::send_request_vote_to_all_servers, this);	
+	std::this_thread::sleep_for(std::chrono::milliseconds(10000));
+	rpc_api_server_.start(this, BASE_PORT + RECEIVER_PORT + ((Server*)server_)->get_server_id());
 }
 
 

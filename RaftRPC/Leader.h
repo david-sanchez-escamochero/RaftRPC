@@ -42,10 +42,8 @@ protected:
 	void					dispatch_client_request_value(RPC_sockets* rpc);
 
 
-	std::thread				thread_send_heart_beat_all_servers_;
-	//std::thread				thread_check_leader_time_out_to_change_term_;
-	void					send_heart_beat_all_servers();
-	//void					check_leader_time_out_to_change_term();
+	std::thread				thread_send_heart_beat_all_servers_;	
+	void					send_heart_beat_all_servers();	
 	std::condition_variable cv_send_heart_beat_all_servers_;
 	
 
