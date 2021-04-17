@@ -8,7 +8,7 @@
 Follower::Follower(void* server)
 {	
 	server_											= server;
-	Tracer::trace("(Follower." + std::to_string(((Server*)server_)->get_server_id()) + ") I am a Follower\r\n", ServeryTrace::action_trace);
+	Tracer::trace("(Follower." + std::to_string(((Server*)server_)->get_server_id()) + ") I am a Follower\r\n", SeverityTrace::action_trace);
 	have_to_die_									= false;
 	receiving_heartbeats_							= ELECTION_TIME_OUT; // Tries alllowed without receiving heartbeats 
 	last_time_stam_taken_miliseconds_				= duration_cast<milliseconds>(system_clock::now().time_since_epoch());	
@@ -45,7 +45,7 @@ void Follower::check_if_there_is_candidate_or_leader()
 			if (!have_to_die_) {
 				milliseconds current_time_stam_taken_miliseconds = duration_cast<milliseconds>(system_clock::now().time_since_epoch());
 
-				Tracer::trace("(Follower." + std::to_string(((Server*)server_)->get_server_id()) + ") Waiting if there is candidate or leader " + std::to_string(count_check_if_there_is_candidate_or_leader_++) + "...\r\n", ServeryTrace::warning_trace);
+				Tracer::trace("(Follower." + std::to_string(((Server*)server_)->get_server_id()) + ") Waiting if there is candidate or leader " + std::to_string(count_check_if_there_is_candidate_or_leader_++) + "...\r\n", SeverityTrace::warning_trace);
 
 				if ((abs(last_time_stam_taken_miliseconds_.count() - current_time_stam_taken_miliseconds.count())) > TIME_OUT_CHECK_IF_THERE_IS_CANDIDATE_OR_LEADER)
 				{
@@ -218,24 +218,59 @@ void Follower::dispatch(RPC_sockets* rpc)
 }
 
 void Follower::append_entry_role(
-	/* [in] */ int argument_term_,
-	/* [in] */ int argument_leader_id_,
-	/* [in] */ int argument_prev_log_index_,
-	/* [in] */ int argument_prev_log_term_,
-	/* [in] */ int argument_entries_[1000],
-	/* [in] */ int argument_leader_commit_,
-	/* [out] */ int* result_term_,
-	/* [out] */ int* result_success_) {
+	/* [in] */ int argument_term,
+	/* [in] */ int argument_leader_id,
+	/* [in] */ int argument_prev_log_index,
+	/* [in] */ int argument_prev_log_term,
+	/* [in] */ int argument_entries[1000],
+	/* [in] */ int argument_leader_commit,
+	/* [out] */ int* result_term,
+	/* [out] */ int* result_success) {
 	printf("FOLLOWER - append_entry_role\r\n");
+
+	// Heart beat...(argument entries is empty.) 
+	if (argument_entries[0] == 0) {
+	}
+	// Append entry...
+	else {	
+	}
 }
 
 
 void Follower::request_vote_role(
-	/* [in] */ int argument_term_,
-	/* [in] */ int argument_candidate_id_,
-	/* [in] */ int argument_last_log_index_,
-	/* [in] */ int argument_last_log_term_,
-	/* [out] */ int* result_term_,
-	/* [out] */ int* result_vote_granted_) {
+	/* [in] */ int argument_term,
+	/* [in] */ int argument_candidate_id,
+	/* [in] */ int argument_last_log_index,
+	/* [in] */ int argument_last_log_term,
+	/* [out] */ int* result_term,
+	/* [out] */ int* result_vote_granted) {
 	printf("FOLLOWER - request_vote_role\r\n");
+	
+	// If term is out of date
+	if (argument_term < ((Server*)server_)->get_current_term()) {
+		*result_vote_granted = false;
+		*result_term = ((Server*)server_)->get_current_term();
+		Tracer::trace("(Follower." + std::to_string(((Server*)server_)->get_server_id()) + ") Term is out of date " + std::to_string(argument_term) + " < " + std::to_string(((Server*)server_)->get_current_term()) + "\r\n", SeverityTrace::error_trace);
+	}
+	// I have already voted.
+	else if (((Server*)server_)->get_voted_for() != NONE) {
+		*result_vote_granted = false;
+		*result_term = ((Server*)server_)->get_current_term();
+		Tracer::trace("(Follower." + std::to_string(((Server*)server_)->get_server_id()) + ") I have already voted:" + std::to_string(((Server*)server_)->get_voted_for()) + "\r\n", SeverityTrace::error_trace);
+	}
+	// Candidate's term is updated...
+	// CandidateID is not null. 
+	// Candidate's log is at least as up-to-date receivers's log, grant vote.
+	else if (
+		(argument_term >= ((Server*)server_)->get_current_term()) &&
+		(argument_candidate_id != NONE)							 //&& 
+		//(rpc->request_vote.argument_last_log_index_ == 0)							 && TODO: ?¿?¿?¿?¿?¿?¿?¿?¿?¿?
+		//(rpc->request_vote.argument_last_log_term_ == 0)								TODO: ?¿?¿?¿?¿?¿?¿?¿?¿?¿?¿
+		)
+	{
+		((Server*)server_)->set_current_term(argument_term);
+		((Server*)server_)->set_voted_for(argument_candidate_id);
+		*result_vote_granted = true;
+		Tracer::trace("(Follower." + std::to_string(((Server*)server_)->get_server_id()) + ") Vote granted to :" + std::to_string(argument_candidate_id) + "\r\n", SeverityTrace::action_trace);
+	}
 }

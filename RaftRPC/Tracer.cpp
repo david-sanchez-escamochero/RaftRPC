@@ -27,16 +27,19 @@ Tracer::Tracer()
 	
 }
 
-void Tracer::trace(std::string str_log, ServeryTrace severity)
+void Tracer::trace(std::string str_log, SeverityTrace severity)
 {	
-		if (severity == ServeryTrace::info_trace) 
-			printf("\033[0;37m");			
-		else if (severity == ServeryTrace::warning_trace)
-			printf("\033[0;33m");
-		else if (severity == ServeryTrace::error_trace)
-			printf("\033[1;31m");
-		else if(severity == ServeryTrace::action_trace)
-			printf("\033[0;32m");
+		if (severity == SeverityTrace::info_trace) 
+			printf("\033[0;37m");// White			
+		else if (severity == SeverityTrace::warning_trace)
+			printf("\033[0;33m");// Yellow
+		else if (severity == SeverityTrace::error_trace)
+			printf("\033[1;31m");// Red
+		else if(severity == SeverityTrace::action_trace)
+			printf("\033[0;32m");// Green
+		else if(severity == SeverityTrace::change_status_trace)
+			printf("\033[0;36m");// Cyan
+			
 
 		
 		static int count_line_ = 0;

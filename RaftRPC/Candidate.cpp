@@ -5,7 +5,7 @@
 Candidate::Candidate(void* server)
 {	
 	server_ = server;	
-	Tracer::trace("(Candidate." + std::to_string(((Server*)server_)->get_server_id()) + ") I am a CANDIDATE\r\n", ServeryTrace::action_trace);
+	Tracer::trace("(Candidate." + std::to_string(((Server*)server_)->get_server_id()) + ") I am a CANDIDATE\r\n", SeverityTrace::action_trace);
 	there_is_leader_					= false;
 	have_to_die_						= false;
 	count_received_votes_				= 1; // Starts in 1, because we dont send messages to myself. 	
@@ -77,7 +77,7 @@ void Candidate::send_request_vote_to_all_servers()
 							);
 
 							if (status) {
-								Tracer::trace("(Candidate." + std::to_string(((Server*)server_)->get_server_id()) + ") Failed to send request vote error: " + std::to_string(status) + "\r\n", ServeryTrace::error_trace);
+								Tracer::trace("(Candidate." + std::to_string(((Server*)server_)->get_server_id()) + ") Failed to send request vote error: " + std::to_string(status) + "\r\n", SeverityTrace::error_trace);
 							}
 							else {
 								// And its terms is equal or highest than mine... 
@@ -109,14 +109,15 @@ void Candidate::send_request_vote_to_all_servers()
 					}
 				}
 
-
-				if ((abs(last_time_stam_taken_miliseconds_.count() - current_time_stam_taken_miliseconds.count())) > TIME_OUT_TERM)
-				{
-					Tracer::trace("(Candidate." + std::to_string(((Server*)server_)->get_server_id()) + ") Time out without being Leader\r\n");
-					term_finished_ = true;
-				}
-				else {
-					Tracer::trace("(Candidate." + std::to_string(((Server*)server_)->get_server_id()) + ") Time out term: " + std::to_string((abs(last_time_stam_taken_miliseconds_.count() - current_time_stam_taken_miliseconds.count()))) + "ms > " + std::to_string(TIME_OUT_TERM)+ "\r\n", ServeryTrace::warning_trace);
+				if ((!there_is_leader_) && (!have_to_die_)) {
+					if ((abs(last_time_stam_taken_miliseconds_.count() - current_time_stam_taken_miliseconds.count())) > TIME_OUT_TERM)
+					{
+						Tracer::trace("(Candidate." + std::to_string(((Server*)server_)->get_server_id()) + ") Time out without being Leader\r\n");
+						term_finished_ = true;
+					}
+					else {
+						Tracer::trace("(Candidate." + std::to_string(((Server*)server_)->get_server_id()) + ") Time out term: " + std::to_string((abs(last_time_stam_taken_miliseconds_.count() - current_time_stam_taken_miliseconds.count()))) + "ms > " + std::to_string(TIME_OUT_TERM) + "\r\n", SeverityTrace::warning_trace);
+					}
 				}
 			}
 		}
@@ -325,20 +326,20 @@ void Candidate::dispatch(RPC_sockets* rpc)
 
 
 void Candidate::append_entry_role(
-	/* [in] */ int argument_term_,
-	/* [in] */ int argument_leader_id_,
-	/* [in] */ int argument_prev_log_index_,
-	/* [in] */ int argument_prev_log_term_,
-	/* [in] */ int argument_entries_[1000],
-	/* [in] */ int argument_leader_commit_,
-	/* [out] */ int* result_term_,
-	/* [out] */ int* result_success_) {}
+	/* [in] */ int argument_term,
+	/* [in] */ int argument_leader_id,
+	/* [in] */ int argument_prev_log_index,
+	/* [in] */ int argument_prev_log_term,
+	/* [in] */ int argument_entries[1000],
+	/* [in] */ int argument_leader_commit,
+	/* [out] */ int* result_term,
+	/* [out] */ int* result_success) {}
 
 
 void Candidate::request_vote_role(
-	/* [in] */ int argument_term_,
-	/* [in] */ int argument_candidate_id_,
-	/* [in] */ int argument_last_log_index_,
-	/* [in] */ int argument_last_log_term_,
-	/* [out] */ int* result_term_,
-	/* [out] */ int* result_vote_granted_) {}
+	/* [in] */ int argument_term,
+	/* [in] */ int argument_candidate_id,
+	/* [in] */ int argument_last_log_index,
+	/* [in] */ int argument_last_log_term,
+	/* [out] */ int* result_term,
+	/* [out] */ int* result_vote_granted) {}

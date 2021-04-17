@@ -169,7 +169,7 @@ void Server::check_new_state()
 				//std::lock_guard<std::mutex> locker_new_state(mu_new_state_);
 				std::lock_guard<std::mutex> locker(mu_server_);
 				if (current_state_ != new_state_) {
-					Tracer::trace("Server(" + std::to_string(server_id_) + ") State changes from " + RaftUtils::parse_state_to_string(current_state_) + " to " + RaftUtils::parse_state_to_string(new_state_) + "\r\n");
+					Tracer::trace("Server(" + std::to_string(server_id_) + ") State changes from " + RaftUtils::parse_state_to_string(current_state_) + " to " + RaftUtils::parse_state_to_string(new_state_) + "\r\n", SeverityTrace::change_status_trace);
 					current_state_ = new_state_;
 					connector_ = get_current_shape_sever(current_state_);
 
@@ -185,7 +185,7 @@ void Server::set_new_state(StateEnum state)
 {			
 	{
 		//std::lock_guard<std::mutex> locker_new_state(mu_new_state_);
-		Tracer::trace("Server(" + std::to_string(server_id_) + ") New state has been requested\r\n", ServeryTrace::action_trace);
+		Tracer::trace("Server(" + std::to_string(server_id_) + ") New state has been requested\r\n", SeverityTrace::action_trace);
 		new_state_ = state;
 		semaphore_new_state_.notify(SEMAPHORE_SERVER_NEW_STATE);
 	}
@@ -194,7 +194,7 @@ void Server::set_new_state(StateEnum state)
 void Server::increment_current_term()
 {	
 	current_term_++;
-	Tracer::trace("Server(" + std::to_string(server_id_) + ") Increment term from " + std::to_string(current_term_ - 1) + " to " + std::to_string(current_term_) + "\r\n", ServeryTrace::action_trace);
+	Tracer::trace("Server(" + std::to_string(server_id_) + ") Increment term from " + std::to_string(current_term_ - 1) + " to " + std::to_string(current_term_) + "\r\n", SeverityTrace::action_trace);
 }
 
 int Server::get_current_term()

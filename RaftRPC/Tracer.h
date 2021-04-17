@@ -3,13 +3,13 @@
 #include <string>
 #include <mutex>
 
-enum class ServeryTrace { warning_trace, info_trace, error_trace, action_trace };
+enum class SeverityTrace { warning_trace, info_trace, error_trace, action_trace, change_status_trace };
 
 class Tracer
 {
 public:
 	Tracer();
-	static void trace(std::string str_log, ServeryTrace severity = ServeryTrace::info_trace);
+	static void trace(std::string str_log, SeverityTrace severity = SeverityTrace::info_trace);
 	
 private:
 	
