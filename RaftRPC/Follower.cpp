@@ -88,50 +88,50 @@ void Follower::dispatch_append_entry(RPC_sockets* rpc)
 	}
 }
 		
-void Follower::dispatch_request_vote(RPC_sockets* rpc) {
-
-	if (rpc->rpc_direction == RPCDirection_sockets::rpc_in_invoke) {
-		// Set as result. 
-		rpc->rpc_direction = RPCDirection_sockets::rpc_out_result;
-
-		// If term is out of date
-		if (rpc->request_vote.argument_term_ < ((Server*)server_)->get_current_term()) {
-			rpc->request_vote.result_term_ = false;
-			rpc->request_vote.result_term_ = ((Server*)server_)->get_current_term();
-			Tracer::trace("(Follower." + std::to_string(((Server*)server_)->get_server_id()) + ") Term is out of date " + std::to_string(rpc->request_vote.argument_term_) + " < " + std::to_string(((Server*)server_)->get_current_term()) + "\r\n");
-		}
-		// I have already voted.
-		else if (((Server*)server_)->get_voted_for() != NONE) {
-			rpc->request_vote.result_term_ = false;
-			rpc->request_vote.result_term_ = ((Server*)server_)->get_current_term();
-			Tracer::trace("(Follower." + std::to_string(((Server*)server_)->get_server_id()) + ") I have already voted:" + std::to_string(((Server*)server_)->get_voted_for()) + "\r\n");
-		}
-		// Candidate's term is updated...
-		// CandidateID is not null. 
-		// Candidate's log is at least as up-to-date receivers's log, grant vote.
-		else if (
-			(rpc->request_vote.argument_term_ >= ((Server*)server_)->get_current_term()) &&
-			(rpc->request_vote.argument_candidate_id_ != NONE)							 //&& 
-			//(rpc->request_vote.argument_last_log_index_ == 0)							 && TODO: ?¿?¿?¿?¿?¿?¿?¿?¿?¿?
-			//(rpc->request_vote.argument_last_log_term_ == 0)								TODO: ?¿?¿?¿?¿?¿?¿?¿?¿?¿?¿
-			)
-		{
-			((Server*)server_)->set_current_term(rpc->request_vote.argument_term_);
-			((Server*)server_)->set_voted_for(rpc->request_vote.argument_candidate_id_);
-			Tracer::trace("(Follower." + std::to_string(((Server*)server_)->get_server_id()) + ") Vote granted to :" + std::to_string(rpc->request_vote.argument_candidate_id_) + "\r\n");
-		}
-
-
-		send(rpc,
-			BASE_PORT + RECEIVER_PORT + rpc->request_vote.argument_candidate_id_,
-			std::string(SERVER_TEXT) + "(F)." + std::to_string(((Server*)server_)->get_server_id()),
-			std::string(REQUEST_VOTE_TEXT) + std::string("(") + std::string(RESULT_TEXT) + std::string(")"),
-			std::string(SERVER_TEXT) + "(C)." + std::to_string(rpc->request_vote.argument_candidate_id_)
-		);
-	}
-	else if (rpc->rpc_direction == RPCDirection_sockets::rpc_out_result) {
-	}
-}
+//void Follower::dispatch_request_vote(RPC_sockets* rpc) {
+//
+//	if (rpc->rpc_direction == RPCDirection_sockets::rpc_in_invoke) {
+//		// Set as result. 
+//		rpc->rpc_direction = RPCDirection_sockets::rpc_out_result;
+//
+//		// If term is out of date
+//		if (rpc->request_vote.argument_term_ < ((Server*)server_)->get_current_term()) {
+//			rpc->request_vote.result_term_ = false;
+//			rpc->request_vote.result_term_ = ((Server*)server_)->get_current_term();
+//			Tracer::trace("(Follower." + std::to_string(((Server*)server_)->get_server_id()) + ") Term is out of date " + std::to_string(rpc->request_vote.argument_term_) + " < " + std::to_string(((Server*)server_)->get_current_term()) + "\r\n");
+//		}
+//		// I have already voted.
+//		else if (((Server*)server_)->get_voted_for() != NONE) {
+//			rpc->request_vote.result_term_ = false;
+//			rpc->request_vote.result_term_ = ((Server*)server_)->get_current_term();
+//			Tracer::trace("(Follower." + std::to_string(((Server*)server_)->get_server_id()) + ") I have already voted:" + std::to_string(((Server*)server_)->get_voted_for()) + "\r\n");
+//		}
+//		// Candidate's term is updated...
+//		// CandidateID is not null. 
+//		// Candidate's log is at least as up-to-date receivers's log, grant vote.
+//		else if (
+//			(rpc->request_vote.argument_term_ >= ((Server*)server_)->get_current_term()) &&
+//			(rpc->request_vote.argument_candidate_id_ != NONE)							 //&& 
+//			//(rpc->request_vote.argument_last_log_index_ == 0)							 && TODO: ?¿?¿?¿?¿?¿?¿?¿?¿?¿?
+//			//(rpc->request_vote.argument_last_log_term_ == 0)								TODO: ?¿?¿?¿?¿?¿?¿?¿?¿?¿?¿
+//			)
+//		{
+//			((Server*)server_)->set_current_term(rpc->request_vote.argument_term_);
+//			((Server*)server_)->set_voted_for(rpc->request_vote.argument_candidate_id_);
+//			Tracer::trace("(Follower." + std::to_string(((Server*)server_)->get_server_id()) + ") Vote granted to :" + std::to_string(rpc->request_vote.argument_candidate_id_) + "\r\n");
+//		}
+//
+//
+//		send(rpc,
+//			BASE_PORT + RECEIVER_PORT + rpc->request_vote.argument_candidate_id_,
+//			std::string(SERVER_TEXT) + "(F)." + std::to_string(((Server*)server_)->get_server_id()),
+//			std::string(REQUEST_VOTE_TEXT) + std::string("(") + std::string(RESULT_TEXT) + std::string(")"),
+//			std::string(SERVER_TEXT) + "(C)." + std::to_string(rpc->request_vote.argument_candidate_id_)
+//		);
+//	}
+//	else if (rpc->rpc_direction == RPCDirection_sockets::rpc_out_result) {
+//	}
+//}
 		
 void Follower::dispatch_append_heart_beat(RPC_sockets* rpc) 
 {
@@ -196,10 +196,10 @@ void Follower::dispatch(RPC_sockets* rpc)
 			dispatch_append_entry(rpc);
 		}
 		// If I receive a request vote(// Another server is faster than I am. )
-		else if (rpc->rpc_type == RPCTypeEnum_sockets::rpc_append_request_vote)
-		{
-			dispatch_request_vote(rpc);
-		}
+		//else if (rpc->rpc_type == RPCTypeEnum_sockets::rpc_append_request_vote)
+		//{
+		//	dispatch_request_vote(rpc);
+		//}
 		// Another server establishes itself as a leader. 
 		else if (rpc->rpc_type == RPCTypeEnum_sockets::rpc_append_heart_beat) {
 			dispatch_append_heart_beat(rpc);

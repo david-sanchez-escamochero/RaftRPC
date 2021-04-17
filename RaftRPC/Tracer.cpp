@@ -30,7 +30,7 @@ Tracer::Tracer()
 void Tracer::trace(std::string str_log, SeverityTrace severity)
 {	
 		if (severity == SeverityTrace::info_trace) 
-			printf("\033[0;37m");// White			
+			printf("\033[0;37m");// White					
 		else if (severity == SeverityTrace::warning_trace)
 			printf("\033[0;33m");// Yellow
 		else if (severity == SeverityTrace::error_trace)
@@ -46,4 +46,6 @@ void Tracer::trace(std::string str_log, SeverityTrace severity)
 		//std::lock_guard<std::mutex> guard(mu_); // RAII
 		str_log = std::to_string(count_line_++) + ".-" + "[" + std::to_string(GetTickCount()) + "]" + str_log;
 		printf(str_log.c_str());
+
+		
 }

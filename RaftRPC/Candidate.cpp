@@ -333,7 +333,40 @@ void Candidate::append_entry_role(
 	/* [in] */ int argument_entries[1000],
 	/* [in] */ int argument_leader_commit,
 	/* [out] */ int* result_term,
-	/* [out] */ int* result_success) {}
+	/* [out] */ int* result_success) 
+{
+
+	// Heart beat...(argument entries is empty.) 
+	if (argument_entries[0] == 0) 
+	{
+		Tracer::trace("(Candidate." + std::to_string(((Server*)server_)->get_server_id()) + ") received heart_beat from another Leader...\r\n");
+
+		// save current leader's id.
+		((Server*)server_)->set_current_leader_id(argument_leader_id);
+
+		((Server*)server_)->set_new_state(StateEnum::follower_state);
+		there_is_leader_ = true;
+	}
+	else
+	{		
+		// And its terms is equal or highest than mine... 
+		if (argument_term >= ((Server*)server_)->get_current_term()) {
+			Tracer::trace("(Candidate." + std::to_string(((Server*)server_)->get_server_id()) + ") [Accepted]received an append_entry claiming to be leader[term:" + std::to_string(argument_term) + " >= current_term:" + std::to_string(((Server*)server_)->get_current_term()) + "]\r\n");
+
+			*result_success		= true;
+			have_to_die_		= true;
+			there_is_leader_	= true;
+
+			// Inform server that state has changed to follower.  
+			((Server*)server_)->set_new_state(StateEnum::follower_state);
+		}
+		// Reject...
+		else {
+			Tracer::trace("(Candidate." + std::to_string(((Server*)server_)->get_server_id()) + ") [Rejected] received an append_entry claiming to be leader[term:" + std::to_string(argument_term) + " < current_term:" + std::to_string(((Server*)server_)->get_current_term()) + "]\r\n");
+			*result_success = false;
+		}
+	}
+}
 
 
 void Candidate::request_vote_role(
@@ -342,4 +375,22 @@ void Candidate::request_vote_role(
 	/* [in] */ int argument_last_log_index,
 	/* [in] */ int argument_last_log_term,
 	/* [out] */ int* result_term,
-	/* [out] */ int* result_vote_granted) {}
+	/* [out] */ int* result_vote_granted) {
+
+	
+	// And its terms is equal or highest than mine... 
+	if (argument_term >= ((Server*)server_)->get_current_term()) {
+		Tracer::trace("(Candidate." + std::to_string(((Server*)server_)->get_server_id()) + ") [Accepted]received an request_vote[term:" + std::to_string(argument_term) + " >= current_term:" + std::to_string(((Server*)server_)->get_current_term()) + "]\r\n");
+
+		*result_vote_granted = true;
+
+		// Inform server that state has changed to follower.  
+		((Server*)server_)->set_new_state(StateEnum::follower_state);
+	}
+	// Reject...
+	else {
+		Tracer::trace("(Candidate." + std::to_string(((Server*)server_)->get_server_id()) + ") [Rejected]received an request_vote[term:" + std::to_string(argument_term) + " < current_term:" + std::to_string(((Server*)server_)->get_current_term()) + "]\r\n");
+			
+		*result_vote_granted = false;
+	}	
+}

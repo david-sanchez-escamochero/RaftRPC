@@ -43,9 +43,9 @@ protected:
 
 
 	std::thread				thread_send_heart_beat_all_servers_;
-	std::thread				thread_check_leader_time_out_to_change_term_;
+	//std::thread				thread_check_leader_time_out_to_change_term_;
 	void					send_heart_beat_all_servers();
-	void					check_leader_time_out_to_change_term();
+	//void					check_leader_time_out_to_change_term();
 	std::condition_variable cv_send_heart_beat_all_servers_;
 	
 

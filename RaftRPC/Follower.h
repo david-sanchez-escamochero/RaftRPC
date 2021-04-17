@@ -41,7 +41,7 @@ protected:
 	// Dispatchers 
 	void			dispatch(RPC_sockets* rpc);
 	void			dispatch_append_entry(RPC_sockets* rpc);
-	void			dispatch_request_vote(RPC_sockets* rpc);
+	//void			dispatch_request_vote(RPC_sockets* rpc);
 	void			dispatch_append_heart_beat(RPC_sockets* rpc);
 	void			dispatch_client_request_leader(RPC_sockets* rpc);
 	void			dispatch_client_request_value(RPC_sockets* rpc);
