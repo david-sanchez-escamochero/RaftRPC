@@ -30,8 +30,7 @@ Candidate::~Candidate()
 void Candidate::start()
 {
 	thread_send_request_vote_to_all_servers_ = std::thread(&Candidate::send_request_vote_to_all_servers, this);	
-	std::this_thread::sleep_for(std::chrono::milliseconds(10000));
-	rpc_api_server_.start(this, BASE_PORT + RECEIVER_PORT + ((Server*)server_)->get_server_id());
+	std::this_thread::sleep_for(std::chrono::milliseconds(10000));	
 }
 
 
@@ -64,7 +63,7 @@ void Candidate::send_request_vote_to_all_servers()
 							int result_vote_granted;								// True means candidate received vote    
 
 
-							int status = rpc_api_client_.send_request_vote_rpc(
+							int status = ((Server*)server_)->send_request_vote_rpc(
 								RPCTypeEnum::rpc_append_request_vote,
 								RPCDirection::rpc_in_invoke,
 								((Server*)server_)->get_server_id(),

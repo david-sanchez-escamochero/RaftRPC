@@ -52,7 +52,7 @@ void Leader::send_heart_beat_all_servers()
 						int result_term;
 						int result_success;
 
-						rpc_api_client_.send_append_entry_rpc(
+						int status = ((Server*)server_)->send_append_entry_rpc(
 							RPCTypeEnum::rpc_append_heart_beat,
 							RPCDirection::rpc_in_invoke,
 							((Server*)server_)->get_server_id(),

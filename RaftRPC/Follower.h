@@ -47,8 +47,7 @@ protected:
 
 
 
-	// RPC 
-	RPC_API_Client	rpc_api_client_;	
+	// RPC 	
 	void append_entry_role(
 		/* [in] */ int argument_term,
 		/* [in] */ int argument_leader_id,

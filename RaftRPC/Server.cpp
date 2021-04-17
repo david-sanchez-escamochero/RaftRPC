@@ -261,3 +261,58 @@ void Server::set_current_leader_id(int leader_id)
 {
 	current_leader_id_ = leader_id;
 }
+
+int Server::send_append_entry_rpc(	RPCTypeEnum rpc_type, 
+									RPCDirection rpc_direction,		
+									int server_id_origin, 
+									int server_id_target, 
+									int port_target, 
+									int argument_term, 
+									int argument_leader_id, 
+									int argument_prev_log_index, 
+									int argument_prev_log_term, 
+									int argument_entries[], 
+									int argument_leader_commit, 
+									int* result_term, 
+									int* result_success)
+{
+	return rpc_api_client_.send_append_entry_rpc(
+		rpc_type,
+		rpc_direction,
+		server_id_origin,
+		server_id_target,
+		port_target,
+		argument_term,
+		argument_leader_id,
+		argument_prev_log_index,
+		argument_prev_log_term,
+		argument_entries,
+		argument_leader_commit,
+		result_term,
+		result_success);
+}
+int Server::send_request_vote_rpc(	RPCTypeEnum rpc_type, 
+									RPCDirection rpc_direction, 
+									int server_id_origin, 
+									int server_id_target, 
+									int port_target, 
+									int argument_term, 
+									int argument_candidate_id, 
+									int argument_last_log_index, 
+									int argument_last_log_term, 
+									int* result_term, 
+									int* result_vote_granted) 
+{
+	return rpc_api_client_.send_request_vote_rpc(
+		rpc_type,
+		rpc_direction,
+		server_id_origin,
+		server_id_target,
+		port_target,
+		argument_term,
+		argument_candidate_id,
+		argument_last_log_index,
+		argument_last_log_term,
+		result_term,
+		result_vote_granted);
+}

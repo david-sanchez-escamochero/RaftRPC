@@ -108,11 +108,15 @@ namespace rpc_client {
         /* [out] */ int* result_success_)
     {
 
-        NdrClientCall2(
-            (PMIDL_STUB_DESC)&RaftTFM_StubDesc,
-            (PFORMAT_STRING)&RaftTFM__MIDL_ProcFormatString.Format[0],
-            (unsigned char*)&IDL_handle);
-
+        try {
+            NdrClientCall2(
+                (PMIDL_STUB_DESC)&RaftTFM_StubDesc,
+                (PFORMAT_STRING)&RaftTFM__MIDL_ProcFormatString.Format[0],
+                (unsigned char*)&IDL_handle);
+        }
+        catch (...) {
+            
+        }
     }
 
 
@@ -125,12 +129,14 @@ namespace rpc_client {
         /* [out] */ int* result_term_,
         /* [out] */ int* result_vote_granted_)
     {
-
-        NdrClientCall2(
-            (PMIDL_STUB_DESC)&RaftTFM_StubDesc,
-            (PFORMAT_STRING)&RaftTFM__MIDL_ProcFormatString.Format[76],
-            (unsigned char*)&IDL_handle);
-
+        try {
+            NdrClientCall2(
+                (PMIDL_STUB_DESC)&RaftTFM_StubDesc,
+                (PFORMAT_STRING)&RaftTFM__MIDL_ProcFormatString.Format[76],
+                (unsigned char*)&IDL_handle);
+        }
+        catch (...) {
+        }
     }
 
 
