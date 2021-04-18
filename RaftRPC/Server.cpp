@@ -124,8 +124,8 @@ void Server::receive()
 IRole* Server::get_current_shape_sever(StateEnum state)
 {
 	// Before creating a new role, we have to delete previous one. 
-	if (connector_ != nullptr)
-		delete(connector_);
+	//if (connector_ != nullptr)
+	//	delete(connector_);
 
 	IRole* role; 
 	if (state == StateEnum::follower_state) {

@@ -51,7 +51,7 @@ void Leader::send_heart_beat_all_servers()
 
 						int result_term;
 						int result_success;
-						int	argument_entries[MAX_LOG_ENTRIES];
+						int	argument_entries[10];
 						argument_entries[0] = NONE;
 
 						int status = ((Server*)server_)->send_append_entry_rpc(

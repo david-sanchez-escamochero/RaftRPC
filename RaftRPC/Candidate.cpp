@@ -125,6 +125,8 @@ void Candidate::send_request_vote_to_all_servers()
 					}
 				}
 			}
+			int ramdom_timeout = (rand() % 3000) + 3000;
+			std::this_thread::sleep_for(std::chrono::milliseconds(ramdom_timeout));
 		}
 
 		{

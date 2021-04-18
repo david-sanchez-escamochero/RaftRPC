@@ -78,6 +78,8 @@ int RPC_API_Client::send_append_entry(
     
     char port[6];    
     sprintf_s(port, "%d", port_target);    
+
+    printf("CLIENT PORT:%d\r\n", port_target);
     
     // Creates a string binding handle.
     // This function is nothing more than a printf.

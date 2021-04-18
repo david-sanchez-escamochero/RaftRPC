@@ -272,6 +272,8 @@ void Follower::request_vote_role(
 		((Server*)server_)->set_current_term(argument_term);
 		((Server*)server_)->set_voted_for(argument_candidate_id);
 		*result_vote_granted = true;
+		last_time_stam_taken_miliseconds_ = duration_cast<milliseconds>(system_clock::now().time_since_epoch());
+		count_check_if_there_is_candidate_or_leader_ = 0;
 		Tracer::trace("(Follower." + std::to_string(((Server*)server_)->get_server_id()) + ") Vote granted to :" + std::to_string(argument_candidate_id) + "\r\n", SeverityTrace::action_trace);
 	}
 }

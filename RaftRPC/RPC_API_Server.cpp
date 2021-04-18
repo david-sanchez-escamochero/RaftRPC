@@ -29,7 +29,7 @@ RPC_API_Server::~RPC_API_Server()
     if (status)
     {
         printf("Muy chungo!!!!");
-        exit(status);
+        //exit(status);
     }
 
     status = RpcServerUnregisterIf(rpc_server::RaftTFM_v1_0_s_ifspec, NULL, FALSE);
@@ -37,7 +37,7 @@ RPC_API_Server::~RPC_API_Server()
     if (status)
     {
         printf("Super chungo!!!!");
-        exit(status);
+        //exit(status);
     }    
 }
 
@@ -122,7 +122,7 @@ int RPC_API_Server::receive()
 
     char port[6];
     sprintf_s(port, "%d", port_receiver_);
-
+    printf("SERVER PORT:%d\r\n", port_receiver_);
 
     // Uses the protocol combined with the endpoint for receiving
     // remote procedure calls.
