@@ -169,8 +169,7 @@ void Server::check_new_state()
 					current_state_ = new_state_;
 					connector_ = get_current_shape_sever(current_state_);
 					if (connector_) {
-						connector_->start();
-						rpc_api_server_.start(connector_, BASE_PORT + RECEIVER_PORT + get_server_id());
+						connector_->start();						
 					}
 				}
 			}
