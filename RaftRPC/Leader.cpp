@@ -51,6 +51,8 @@ void Leader::send_heart_beat_all_servers()
 
 						int result_term;
 						int result_success;
+						int	argument_entries[MAX_LOG_ENTRIES];
+						argument_entries[0] = NONE;
 
 						int status = ((Server*)server_)->send_append_entry_rpc(
 							RPCTypeEnum::rpc_append_heart_beat,
@@ -62,12 +64,17 @@ void Leader::send_heart_beat_all_servers()
 							((Server*)server_)->get_server_id(),														// So follower can redirect clients
 							((Server*)server_)->get_log_index() - 1,													// Index of log entry immediately preceding	new ones
 							((Server*)server_)->get_term_of_entry_in_log(((Server*)server_)->get_log_index() - 1),		// Term of argument_prev_log_index entry
-							NULL,																						// Log entries to store(empty for heartbeat; may send more than one for efficiency)
+							argument_entries,																						// Log entries to store(empty for heartbeat; may send more than one for efficiency)
 							((Server*)server_)->get_commit_index(),														// Leader’s commitIndex
 							&result_term,
 							&result_success
 						);
-						Tracer::trace("(Leader." + std::to_string(((Server*)server_)->get_server_id()) + ") Sent Heart-beat to Server." + std::to_string(count)+ "\r\n");
+						if (status) {
+							Tracer::trace("(Leader." + std::to_string(((Server*)server_)->get_server_id()) + ") Failed to send append entry(Heart-beat): " + std::to_string(status) + "\r\n", SeverityTrace::error_trace);
+						}
+						else {
+							Tracer::trace("(Leader." + std::to_string(((Server*)server_)->get_server_id()) + ") Sent append entry(Heart-beat) to Server." + std::to_string(count) + "\r\n", SeverityTrace::info_trace);
+						}
 					}
 				}
 			}
