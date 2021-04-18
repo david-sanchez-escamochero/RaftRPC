@@ -160,9 +160,10 @@ void Server::check_new_state()
 		
 		semaphore_new_state_.wait(SEMAPHORE_SERVER_NEW_STATE);
 		{
+			printf("Signal\r\n");
 			{
-				//std::lock_guard<std::mutex> locker_new_state(mu_new_state_);
 				std::lock_guard<std::mutex> locker(mu_server_);
+				printf("locker\r\n");
 				if (current_state_ != new_state_) {
 					Tracer::trace("Server(" + std::to_string(server_id_) + ") State changes from " + RaftUtils::parse_state_to_string(current_state_) + " to " + RaftUtils::parse_state_to_string(new_state_) + "\r\n", SeverityTrace::change_status_trace);
 					current_state_ = new_state_;
@@ -327,7 +328,7 @@ void Server::append_entry_server(
 	/* [out] */ int* result_term,
 	/* [out] */ int* result_success) {
 		{
-			std::lock_guard<std::mutex> locker(mu_server_);
+			//std::lock_guard<std::mutex> locker(mu_server_);
 			if(connector_)
 				connector_->append_entry_role(argument_term,
 				argument_leader_id,
@@ -349,7 +350,7 @@ void Server::request_vote_server(
 	/* [out] */ int* result_term,
 	/* [out] */ int* result_vote_granted) {
 		{
-			std::lock_guard<std::mutex> locker(mu_server_);
+			//std::lock_guard<std::mutex> locker(mu_server_);
 			if (connector_)
 				connector_->request_vote_role(argument_term,
 				argument_candidate_id,

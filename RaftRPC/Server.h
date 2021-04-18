@@ -134,7 +134,7 @@ protected:
 private: 
 	
 	IRole*			connector_;
-	int		server_id_;
+	int				server_id_;
 	Communication	communication_;
 	bool			have_to_die_;	
 	void			dispatch();

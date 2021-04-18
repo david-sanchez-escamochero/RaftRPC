@@ -29,8 +29,7 @@ Candidate::~Candidate()
 
 void Candidate::start()
 {
-	thread_send_request_vote_to_all_servers_ = std::thread(&Candidate::send_request_vote_to_all_servers, this);	
-	std::this_thread::sleep_for(std::chrono::milliseconds(10000));	
+	thread_send_request_vote_to_all_servers_ = std::thread(&Candidate::send_request_vote_to_all_servers, this);		
 }
 
 
