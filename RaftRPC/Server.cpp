@@ -327,8 +327,9 @@ void Server::append_entry_server(
 	/* [out] */ int* result_term,
 	/* [out] */ int* result_success) {
 		{
-			std::lock_guard<std::mutex> locker(mu_server_);
-			connector_->append_entry_role(argument_term,
+			//std::lock_guard<std::mutex> locker(mu_server_);
+			if(connector_)
+				connector_->append_entry_role(argument_term,
 				argument_leader_id,
 				argument_prev_log_index,
 				argument_prev_log_term,
@@ -348,8 +349,9 @@ void Server::request_vote_server(
 	/* [out] */ int* result_term,
 	/* [out] */ int* result_vote_granted) {
 		{
-			std::lock_guard<std::mutex> locker(mu_server_);
-			connector_->request_vote_role(argument_term,
+			//std::lock_guard<std::mutex> locker(mu_server_);
+			if (connector_)
+				connector_->request_vote_role(argument_term,
 				argument_candidate_id,
 				argument_last_log_index,
 				argument_last_log_term,

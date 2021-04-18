@@ -378,20 +378,23 @@ void Candidate::request_vote_role(
 	/* [out] */ int* result_term,
 	/* [out] */ int* result_vote_granted) {
 
-	
-	// And its terms is equal or highest than mine... 
-	if (argument_term >= ((Server*)server_)->get_current_term()) {
-		Tracer::trace("(Candidate." + std::to_string(((Server*)server_)->get_server_id()) + ") [Accepted]received an request_vote[term:" + std::to_string(argument_term) + " >= current_term:" + std::to_string(((Server*)server_)->get_current_term()) + "]\r\n");
+	// If there is not leader yet. 
+	if (there_is_leader_) {
 
-		*result_vote_granted = true;
+		// And its terms is equal or highest than mine... 
+		if (argument_term >= ((Server*)server_)->get_current_term()) {
+			Tracer::trace("(Candidate." + std::to_string(((Server*)server_)->get_server_id()) + ") [Accepted]received an request_vote[term:" + std::to_string(argument_term) + " >= current_term:" + std::to_string(((Server*)server_)->get_current_term()) + "]\r\n");
 
-		// Inform server that state has changed to follower.  
-		((Server*)server_)->set_new_state(StateEnum::follower_state);
+			*result_vote_granted = true;
+
+			// Inform server that state has changed to follower.  
+			((Server*)server_)->set_new_state(StateEnum::follower_state);
+		}
+		// Reject...
+		else {
+			Tracer::trace("(Candidate." + std::to_string(((Server*)server_)->get_server_id()) + ") [Rejected]received an request_vote[term:" + std::to_string(argument_term) + " < current_term:" + std::to_string(((Server*)server_)->get_current_term()) + "]\r\n");
+
+			*result_vote_granted = false;
+		}
 	}
-	// Reject...
-	else {
-		Tracer::trace("(Candidate." + std::to_string(((Server*)server_)->get_server_id()) + ") [Rejected]received an request_vote[term:" + std::to_string(argument_term) + " < current_term:" + std::to_string(((Server*)server_)->get_current_term()) + "]\r\n");
-			
-		*result_vote_granted = false;
-	}	
 }
