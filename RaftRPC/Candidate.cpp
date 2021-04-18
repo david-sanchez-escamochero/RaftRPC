@@ -51,64 +51,69 @@ void Candidate::send_request_vote_to_all_servers()
 			for (int count = 0; ( (count < NUM_SERVERS) && (!received_votes_[count]) && (!there_is_leader_) && (!have_to_die_) && (!term_finished_) ); count++)
 			{
 				milliseconds current_time_stam_taken_miliseconds = duration_cast<milliseconds>(system_clock::now().time_since_epoch());
-				{
-					std::lock_guard<std::mutex> locker_candidate(mu_candidate_);
+									
 
-					if ((!there_is_leader_) && (!have_to_die_)) {
+				if ((!there_is_leader_) && (!have_to_die_)) {
 
-						// If the receiver is not equal to sender...
-						if (count != ((Server*)server_)->get_server_id()) {
+					// If the receiver is not equal to sender...
+					if (count != ((Server*)server_)->get_server_id()) {
 
-							int result_term;										// CurrentTerm, for candidate to update itself
-							int result_vote_granted;								// True means candidate received vote    
+						int result_term;										// CurrentTerm, for candidate to update itself
+						int result_vote_granted;								// True means candidate received vote    
 
 
-							int status = ((Server*)server_)->send_request_vote_rpc(
-								RPCTypeEnum::rpc_append_request_vote,
-								RPCDirection::rpc_in_invoke,
-								((Server*)server_)->get_server_id(),
-								count,
-								BASE_PORT + RECEIVER_PORT + count,
-								((Server*)server_)->get_current_term(),				// Candidate's term
-								((Server*)server_)->get_server_id(),				// Candidate requesting vote
-								((Server*)server_)->get_last_applied(),				// Index of candidate's last log entry (§5.4)
-								0,													// Term of candidate's last log entry (§5.4)
-								&result_term,										// CurrentTerm, for candidate to update itself
-								&result_vote_granted								// True means candidate received vote    
-							);
+						int status = ((Server*)server_)->send_request_vote_rpc(
+							RPCTypeEnum::rpc_append_request_vote,
+							RPCDirection::rpc_in_invoke,
+							((Server*)server_)->get_server_id(),
+							count,
+							BASE_PORT + RECEIVER_PORT + count,
+							((Server*)server_)->get_current_term(),				// Candidate's term
+							((Server*)server_)->get_server_id(),				// Candidate requesting vote
+							((Server*)server_)->get_last_applied(),				// Index of candidate's last log entry (§5.4)
+							0,													// Term of candidate's last log entry (§5.4)
+							&result_term,										// CurrentTerm, for candidate to update itself
+							&result_vote_granted								// True means candidate received vote    
+						);
 
-							if (status) {
-								Tracer::trace("(Candidate." + std::to_string(((Server*)server_)->get_server_id()) + ") Failed to send request vote error: " + std::to_string(status) + "\r\n", SeverityTrace::error_trace);
-							}
-							else {
-								// And its terms is equal or highest than mine... 
-								if (result_term >= ((Server*)server_)->get_current_term()) {
-									have_to_die_ = true;
-									there_is_leader_ = true;
-									Tracer::trace("(Candidate." + std::to_string(((Server*)server_)->get_server_id()) + ") [Accepted]received an request_vote[term:" + std::to_string(result_term) + " >= current_term:" + std::to_string(((Server*)server_)->get_current_term()) + "]\r\n");
-									// Inform server that state has changed to follower.  
-									((Server*)server_)->set_new_state(StateEnum::follower_state);
+						{
+							std::lock_guard<std::mutex> locker_candidate(mu_candidate_);
+							if (!there_is_leader_) 
+							{
+								if (status) {
+									Tracer::trace("(Candidate." + std::to_string(((Server*)server_)->get_server_id()) + ") Failed to send request vote error: " + std::to_string(status) + "\r\n", SeverityTrace::error_trace);
 								}
-								else
-								{
-									if (result_vote_granted == (int)true) {
-										count_received_votes_++;
-										// If I wins election. 	
-										if (count_received_votes_ >= MAJORITY) {
-											Tracer::trace("(Candidate." + std::to_string(((Server*)server_)->get_server_id()) + ") I have received just mayority of request vote: " + std::to_string(count_received_votes_) + "\r\n");
-											((Server*)server_)->set_new_state(StateEnum::leader_state);
-											there_is_leader_ = true;
-										}
+								else {
+									// And its terms is equal or highest than mine... 
+									if (result_term >= ((Server*)server_)->get_current_term()) {
+										have_to_die_ = true;
+										there_is_leader_ = true;
+										Tracer::trace("(Candidate." + std::to_string(((Server*)server_)->get_server_id()) + ") [Accepted]received an request_vote[term:" + std::to_string(result_term) + " >= current_term:" + std::to_string(((Server*)server_)->get_current_term()) + "]\r\n");
+										// Inform server that state has changed to follower.  
+										((Server*)server_)->set_new_state(StateEnum::follower_state);
 									}
-									// If I was rejected. 
-									else {
-										Tracer::trace("(Candidate." + std::to_string(((Server*)server_)->get_server_id()) + ") Rejected request voted\r\n");
+									else
+									{
+										if (result_vote_granted == (int)true) {
+											count_received_votes_++;
+											// If I wins election. 	
+											if (count_received_votes_ >= MAJORITY) {
+												Tracer::trace("(Candidate." + std::to_string(((Server*)server_)->get_server_id()) + ") I have received just mayority of request vote: " + std::to_string(count_received_votes_) + "\r\n");
+												((Server*)server_)->set_new_state(StateEnum::leader_state);
+												there_is_leader_ = true;
+											}
+										}
+										// If I was rejected. 
+										else {
+											Tracer::trace("(Candidate." + std::to_string(((Server*)server_)->get_server_id()) + ") Rejected request voted\r\n");
+										}
 									}
 								}
 							}
 						}
 					}
 				}
+				
 
 				if ((!there_is_leader_) && (!have_to_die_)) {
 					if ((abs(last_time_stam_taken_miliseconds_.count() - current_time_stam_taken_miliseconds.count())) > TIME_OUT_TERM)
@@ -378,8 +383,10 @@ void Candidate::request_vote_role(
 	/* [out] */ int* result_term,
 	/* [out] */ int* result_vote_granted) {
 
+	std::lock_guard<std::mutex> locker_candidate(mu_candidate_);
+
 	// If there is not leader yet. 
-	if (there_is_leader_) {
+	if (!there_is_leader_) {
 
 		// And its terms is equal or highest than mine... 
 		if (argument_term >= ((Server*)server_)->get_current_term()) {
@@ -389,6 +396,7 @@ void Candidate::request_vote_role(
 
 			// Inform server that state has changed to follower.  
 			((Server*)server_)->set_new_state(StateEnum::follower_state);
+			there_is_leader_ = true;
 		}
 		// Reject...
 		else {
