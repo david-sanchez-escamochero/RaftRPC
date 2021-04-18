@@ -394,6 +394,7 @@ void Candidate::request_vote_role(
 			Tracer::trace("(Candidate." + std::to_string(((Server*)server_)->get_server_id()) + ") [Accepted]received an request_vote[term:" + std::to_string(argument_term) + " >= current_term:" + std::to_string(((Server*)server_)->get_current_term()) + "]\r\n");
 
 			*result_vote_granted = true;
+			*result_term = ((Server*)server_)->get_current_term();
 
 			// Inform server that state has changed to follower.  
 			((Server*)server_)->set_new_state(StateEnum::follower_state);
@@ -404,6 +405,7 @@ void Candidate::request_vote_role(
 			Tracer::trace("(Candidate." + std::to_string(((Server*)server_)->get_server_id()) + ") [Rejected]received an request_vote[term:" + std::to_string(argument_term) + " < current_term:" + std::to_string(((Server*)server_)->get_current_term()) + "]\r\n");
 
 			*result_vote_granted = false;
+			*result_term = ((Server*)server_)->get_current_term();
 		}
 	}
 }
