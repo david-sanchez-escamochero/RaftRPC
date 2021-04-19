@@ -11,8 +11,41 @@
 
 
 
+// https://docs.microsoft.com/en-us/windows/console/console-virtual-terminal-sequences#samples
+
+bool EnableVTMode()
+{
+    // Set output mode to handle virtual terminal sequences
+    HANDLE hOut = GetStdHandle(STD_OUTPUT_HANDLE);
+    if (hOut == INVALID_HANDLE_VALUE)
+    {
+        return false;
+    }
+
+    DWORD dwMode = 0;
+    if (!GetConsoleMode(hOut, &dwMode))
+    {
+        return false;
+    }
+
+    dwMode |= ENABLE_VIRTUAL_TERMINAL_PROCESSING;
+    if (!SetConsoleMode(hOut, dwMode))
+    {
+        return false;
+    }
+    return true;
+}
+
+
 int main(int argc, char** argv)
 {
+    bool fSuccess = EnableVTMode();
+    if (!fSuccess)
+    {
+        printf("Unable to enter VT processing mode. Quitting.\n");
+    }
+
+
     std::cout << "RAFT Test...\n";
     if (argc < 2) {
         printf("Usage:\r\n");

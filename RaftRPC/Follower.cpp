@@ -225,12 +225,13 @@ void Follower::append_entry_role(
 	/* [in] */ int argument_leader_commit,
 	/* [out] */ int* result_term,
 	/* [out] */ int* result_success) {
-	printf("FOLLOWER - append_entry_role\r\n");
+	
 
 	// Heart beat...(argument entries is empty.) 
 	if (argument_entries[0] == NONE) {
 		last_time_stam_taken_miliseconds_ = duration_cast<milliseconds>(system_clock::now().time_since_epoch());
-		count_check_if_there_is_candidate_or_leader_ = 0;
+		count_check_if_there_is_candidate_or_leader_ = 0;		
+		Tracer::trace("(Follower." + std::to_string(((Server*)server_)->get_server_id()) + ") Received append entry(Heart-beat) to Server. \r\n", SeverityTrace::action_trace);
 	}
 	// Append entry...
 	else {	

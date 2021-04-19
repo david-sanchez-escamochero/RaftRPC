@@ -408,4 +408,8 @@ void Candidate::request_vote_role(
 			*result_term = ((Server*)server_)->get_current_term();
 		}
 	}
+	else
+	{
+		Tracer::trace("(Candidate." + std::to_string(((Server*)server_)->get_server_id()) + ") [Rejected]received an request_vote but it already exists an Leader\r\n");
+	}
 }
