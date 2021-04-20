@@ -80,14 +80,14 @@ void Candidate::send_request_vote_to_all_servers()
 							if (!there_is_leader_) 
 							{
 								if (status) {
-									Tracer::trace("(Candidate." + std::to_string(((Server*)server_)->get_server_id()) + ") Failed to send request vote error: " + std::to_string(status) + "\r\n", SeverityTrace::error_trace);
+									Tracer::trace("(Candidate." + std::to_string(((Server*)server_)->get_server_id()) + ") [SendAllServer::FAILED] Failed to send request vote error: " + std::to_string(status) + "\r\n", SeverityTrace::error_trace);
 								}
 								else {
 									// And its terms is equal or highest than mine... 
 									if (result_term >= ((Server*)server_)->get_current_term()) {
 										have_to_die_ = true;
 										there_is_leader_ = true;
-										Tracer::trace("(Candidate." + std::to_string(((Server*)server_)->get_server_id()) + ") [Accepted]received an request_vote[term:" + std::to_string(result_term) + " >= current_term:" + std::to_string(((Server*)server_)->get_current_term()) + "]\r\n");
+										Tracer::trace("(Candidate." + std::to_string(((Server*)server_)->get_server_id()) + ") [SendAllServer::Accepted] Received an request_vote[term:" + std::to_string(result_term) + " >= current_term:" + std::to_string(((Server*)server_)->get_current_term()) + "]\r\n");
 										// Inform server that state has changed to follower.  
 										((Server*)server_)->set_new_state(StateEnum::follower_state);
 									}
@@ -97,14 +97,14 @@ void Candidate::send_request_vote_to_all_servers()
 											count_received_votes_++;
 											// If I wins election. 	
 											if (count_received_votes_ >= MAJORITY) {
-												Tracer::trace("(Candidate." + std::to_string(((Server*)server_)->get_server_id()) + ") I have received just mayority of request vote: " + std::to_string(count_received_votes_) + "\r\n");
+												Tracer::trace("(Candidate." + std::to_string(((Server*)server_)->get_server_id()) + ") [SendAllServer] I have received just mayority of request vote: " + std::to_string(count_received_votes_) + "\r\n");
 												((Server*)server_)->set_new_state(StateEnum::leader_state);
 												there_is_leader_ = true;
 											}
 										}
 										// If I was rejected. 
 										else {
-											Tracer::trace("(Candidate." + std::to_string(((Server*)server_)->get_server_id()) + ") Rejected request voted\r\n");
+											Tracer::trace("(Candidate." + std::to_string(((Server*)server_)->get_server_id()) + ") [SendAllServer::Rejected] Rejected request voted\r\n");
 										}
 									}
 								}
@@ -343,36 +343,55 @@ void Candidate::append_entry_role(
 	/* [out] */ int* result_success) 
 {
 
-	// Heart beat...(argument entries is empty.) 
-	if (argument_entries[0] == 0) 
-	{
-		Tracer::trace("(Candidate." + std::to_string(((Server*)server_)->get_server_id()) + ") received heart_beat from another Leader...\r\n");
+	std::lock_guard<std::mutex> locker_candidate(mu_candidate_);
 
-		// save current leader's id.
-		((Server*)server_)->set_current_leader_id(argument_leader_id);
+	if (!there_is_leader_) {
 
-		((Server*)server_)->set_new_state(StateEnum::follower_state);
-		there_is_leader_ = true;
-	}
-	else
-	{		
-		// And its terms is equal or highest than mine... 
-		if (argument_term >= ((Server*)server_)->get_current_term()) {
-			Tracer::trace("(Candidate." + std::to_string(((Server*)server_)->get_server_id()) + ") [Accepted]received an append_entry claiming to be leader[term:" + std::to_string(argument_term) + " >= current_term:" + std::to_string(((Server*)server_)->get_current_term()) + "]\r\n");
+		// Heart beat...(argument entries is empty.) 
+		if (argument_entries[0] == 0)
+		{
+			// If term is out of date
+			if (argument_term < ((Server*)server_)->get_current_term()) {
+				*result_term = ((Server*)server_)->get_current_term();
+				*result_success = false;
+				Tracer::trace(">>>>>[RECEVIVED](Candidate." + std::to_string(((Server*)server_)->get_server_id()) + ") [HeartBeat::Rejected] Term is out of date " + std::to_string(argument_term) + " < " + std::to_string(((Server*)server_)->get_current_term()) + "\r\n", SeverityTrace::error_trace);
+			}
+			// If I discover current leader or new term
+			else if (argument_term >= ((Server*)server_)->get_current_term()) {
+				Tracer::trace(">>>>>[RECEVIVED](Candidate." + std::to_string(((Server*)server_)->get_server_id()) + ") [HeartBeat::Accepted] Received an append_entry claiming to be leader[term:" + std::to_string(argument_term) + " >= current_term:" + std::to_string(((Server*)server_)->get_current_term()) + "]\r\n");
 
-			*result_success		= true;
-			have_to_die_		= true;
-			there_is_leader_	= true;
+				*result_success = true;
+				have_to_die_ = true;
+				there_is_leader_ = true;
 
-			// Inform server that state has changed to follower.  
-			((Server*)server_)->set_new_state(StateEnum::follower_state);
+				// Inform server that state has changed to follower.  
+				((Server*)server_)->set_new_state(StateEnum::follower_state);
+				((Server*)server_)->set_current_term(argument_term);
+			}
 		}
-		// Reject...
-		else {
-			Tracer::trace("(Candidate." + std::to_string(((Server*)server_)->get_server_id()) + ") [Rejected] received an append_entry claiming to be leader[term:" + std::to_string(argument_term) + " < current_term:" + std::to_string(((Server*)server_)->get_current_term()) + "]\r\n");
-			*result_success = false;
+		// Append entry
+		else
+		{
+			// If term is out of date
+			if (argument_term < ((Server*)server_)->get_current_term()) {
+				*result_term = ((Server*)server_)->get_current_term();
+				*result_success = false;
+				Tracer::trace(">>>>>[RECEVIVED](Candidate." + std::to_string(((Server*)server_)->get_server_id()) + ") [AppendEntry::Rejected] Term is out of date " + std::to_string(argument_term) + " < " + std::to_string(((Server*)server_)->get_current_term()) + "\r\n", SeverityTrace::error_trace);
+			}
+			// And its terms is equal or highest than mine... 
+			if (argument_term >= ((Server*)server_)->get_current_term()) {
+				Tracer::trace(">>>>>[RECEVIVED](Candidate." + std::to_string(((Server*)server_)->get_server_id()) + ") [AppendEntry::Accepted] Received an append_entry claiming to be leader[term:" + std::to_string(argument_term) + " >= current_term:" + std::to_string(((Server*)server_)->get_current_term()) + "]\r\n");
+
+				*result_success = true;
+				have_to_die_ = true;
+				there_is_leader_ = true;
+
+				// Inform server that state has changed to follower.  
+				((Server*)server_)->set_new_state(StateEnum::follower_state);
+			}
 		}
 	}
+	
 }
 
 
@@ -389,9 +408,15 @@ void Candidate::request_vote_role(
 	// If there is not leader yet. 
 	if (!there_is_leader_) {
 
+		// If term is out of date
+		if (argument_term < ((Server*)server_)->get_current_term()) {
+			*result_term = ((Server*)server_)->get_current_term();
+			*result_vote_granted = false;
+			Tracer::trace(">>>>>[RECEVIVED](Candidate." + std::to_string(((Server*)server_)->get_server_id()) + ") [RequestVote::Rejected] Term is out of date " + std::to_string(argument_term) + " < " + std::to_string(((Server*)server_)->get_current_term()) + "\r\n", SeverityTrace::error_trace);
+		}
 		// And its terms is equal or highest than mine... 
-		if (argument_term >= ((Server*)server_)->get_current_term()) {
-			Tracer::trace("(Candidate." + std::to_string(((Server*)server_)->get_server_id()) + ") [Accepted]received an request_vote[term:" + std::to_string(argument_term) + " >= current_term:" + std::to_string(((Server*)server_)->get_current_term()) + "]\r\n");
+		else if (argument_term >= ((Server*)server_)->get_current_term()) {
+			Tracer::trace(">>>>>[RECEVIVED](Candidate." + std::to_string(((Server*)server_)->get_server_id()) + ") [RequestVote::Accepted] received a request_vote[term:" + std::to_string(argument_term) + " >= current_term:" + std::to_string(((Server*)server_)->get_current_term()) + "]\r\n");
 
 			*result_vote_granted = true;
 			*result_term = ((Server*)server_)->get_current_term();
@@ -400,16 +425,9 @@ void Candidate::request_vote_role(
 			((Server*)server_)->set_new_state(StateEnum::follower_state);
 			there_is_leader_ = true;
 		}
-		// Reject...
-		else {
-			Tracer::trace("(Candidate." + std::to_string(((Server*)server_)->get_server_id()) + ") [Rejected]received an request_vote[term:" + std::to_string(argument_term) + " < current_term:" + std::to_string(((Server*)server_)->get_current_term()) + "]\r\n");
-
-			*result_vote_granted = false;
-			*result_term = ((Server*)server_)->get_current_term();
-		}
 	}
 	else
 	{
-		Tracer::trace("(Candidate." + std::to_string(((Server*)server_)->get_server_id()) + ") [Rejected]received an request_vote but it already exists an Leader\r\n");
+		Tracer::trace(">>>>>[RECEVIVED](Candidate." + std::to_string(((Server*)server_)->get_server_id()) + ") [RequestVote::Rejected]received a request_vote but it already exists a Leader\r\n", SeverityTrace::error_trace);
 	}
 }

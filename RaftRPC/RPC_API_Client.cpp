@@ -12,7 +12,7 @@ int RPC_API_Client::send_append_entry_rpc(RPCTypeEnum rpc_type, RPCDirection rpc
     int ret = 999;
     try {
         //Just for debugging(Because if I do not do this, it does not complile.¿?
-        Tracer::trace(">>>>>[SEND] RPC(append_entry) from S." + std::to_string(server_id_origin) + " to S." + std::to_string(server_id_target) + "[port:" + std::to_string(port_target) + "]\r\n");
+        Tracer::trace("<<<<<[SEND] RPC(append_entry) from S." + std::to_string(server_id_origin) + " to S." + std::to_string(server_id_target) + "[port:" + std::to_string(port_target) + "]\r\n");
         ret = send_append_entry(
             // Only Debug
             rpc_type,
@@ -42,7 +42,7 @@ int RPC_API_Client::send_append_entry_rpc(RPCTypeEnum rpc_type, RPCDirection rpc
 int RPC_API_Client::send_request_vote_rpc(RPCTypeEnum rpc_type, RPCDirection rpc_direction, int server_id_origin, int server_id_target, int port_target, int argument_term, int argument_candidate_id, int argument_last_log_index, int argument_last_log_term, int* result_term, int* result_vote_granted)
 {
     int ret;
-    Tracer::trace(">>>>>[SEND] RPC(request_vote) from S." + std::to_string(server_id_origin) + " to S." + std::to_string(server_id_target) + "[port:" + std::to_string(port_target) + "]\r\n");
+    Tracer::trace("<<<<<[SEND] RPC(request_vote) from S." + std::to_string(server_id_origin) + " to S." + std::to_string(server_id_target) + "[port:" + std::to_string(port_target) + "]\r\n");
     try {
         ret = send_request_vote(
             // Only Debug

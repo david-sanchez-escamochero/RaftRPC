@@ -4,12 +4,12 @@
 enum class StateEnum { follower_state, leader_state, candidate_state, unknown_state };
 
 
-#define NUM_SERVERS												2
+#define NUM_SERVERS												3
 #define MAX_LOG_ENTRIES											50
 #define BASE_PORT												6000
 #define SENDER_PORT												100
 #define RECEIVER_PORT											200
-#define MAJORITY												2//( ( NUM_SERVERS % 2 ) + 1 ) - 1  // -1 Because I do not have to send message to myself.
+#define MAJORITY												( ( NUM_SERVERS % 2 ) + 1 ) - 1  // -1 Because I do not have to count on myself
 #define ELECTION_TIME_OUT										3//(s) 	A follower receives no communication over a period of time. 	
 #define	MINIMUM_VALUE_RAMDOM_TIME_OUT							150//(ms)
 #define	TIME_OUT_CHECK_IF_THERE_IS_CANDIDATE_OR_LEADER			10000//(ms)
