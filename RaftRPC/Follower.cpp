@@ -231,7 +231,7 @@ void Follower::append_entry_role(
 	if (argument_entries[0] == NONE) {
 		last_time_stam_taken_miliseconds_ = duration_cast<milliseconds>(system_clock::now().time_since_epoch());
 		count_check_if_there_is_candidate_or_leader_ = 0;		
-		Tracer::trace("(Follower." + std::to_string(((Server*)server_)->get_server_id()) + ") Received append entry(Heart-beat) to Server. \r\n", SeverityTrace::action_trace);
+		Tracer::trace(">>>>>[RECEVIVED](Follower." + std::to_string(((Server*)server_)->get_server_id()) + ") Received append entry(Heart-beat) to Server. \r\n", SeverityTrace::action_trace);
 	}
 	// Append entry...
 	else {	
@@ -252,13 +252,13 @@ void Follower::request_vote_role(
 	if (argument_term < ((Server*)server_)->get_current_term()) {
 		*result_vote_granted = false;
 		*result_term = ((Server*)server_)->get_current_term();
-		Tracer::trace("(Follower." + std::to_string(((Server*)server_)->get_server_id()) + ") Term is out of date " + std::to_string(argument_term) + " < " + std::to_string(((Server*)server_)->get_current_term()) + "\r\n", SeverityTrace::error_trace);
+		Tracer::trace(">>>>>[RECEVIVED](Follower." + std::to_string(((Server*)server_)->get_server_id()) + ") [RequestVote::Rejected] Term is out of date " + std::to_string(argument_term) + " < " + std::to_string(((Server*)server_)->get_current_term()) + "\r\n", SeverityTrace::error_trace);
 	}
-	// I have already voted.
-	else if (((Server*)server_)->get_voted_for() != NONE) {
+	// I have already voted in this term.
+	else if ( (((Server*)server_)->get_voted_for() != NONE) && (argument_term == ((Server*)server_)->get_current_term()) ) {
 		*result_vote_granted = false;
 		*result_term = ((Server*)server_)->get_current_term();
-		Tracer::trace("(Follower." + std::to_string(((Server*)server_)->get_server_id()) + ") I have already voted:" + std::to_string(((Server*)server_)->get_voted_for()) + "\r\n", SeverityTrace::error_trace);
+		Tracer::trace(">>>>>[RECEVIVED](Follower." + std::to_string(((Server*)server_)->get_server_id()) + ") [RequestVote::Rejected]I have already voted:" + std::to_string(((Server*)server_)->get_voted_for()) + "\r\n", SeverityTrace::error_trace);
 	}
 	// Candidate's term is updated...
 	// CandidateID is not null. 
@@ -275,6 +275,9 @@ void Follower::request_vote_role(
 		*result_vote_granted = true;
 		last_time_stam_taken_miliseconds_ = duration_cast<milliseconds>(system_clock::now().time_since_epoch());
 		count_check_if_there_is_candidate_or_leader_ = 0;
-		Tracer::trace("(Follower." + std::to_string(((Server*)server_)->get_server_id()) + ") Vote granted to S.:" + std::to_string(argument_candidate_id) + "\r\n", SeverityTrace::action_trace);
+		Tracer::trace(">>>>>[RECEVIVED](Follower." + std::to_string(((Server*)server_)->get_server_id()) + ") [RequestVote::Accepted]Vote granted to S.:" + std::to_string(argument_candidate_id) + "\r\n", SeverityTrace::action_trace);
+	}
+	else {
+		Tracer::trace(">>>>>[RECEVIVED](Follower." + std::to_string(((Server*)server_)->get_server_id()) + ") Unknown \r\n", SeverityTrace::action_trace);
 	}
 }

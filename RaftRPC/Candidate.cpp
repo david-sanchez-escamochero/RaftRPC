@@ -368,6 +368,9 @@ void Candidate::append_entry_role(
 				((Server*)server_)->set_new_state(StateEnum::follower_state);
 				((Server*)server_)->set_current_term(argument_term);
 			}
+			else {
+				Tracer::trace(">>>>>[RECEVIVED](Candidate." + std::to_string(((Server*)server_)->get_server_id()) + ") Unknown \r\n");
+			}
 		}
 		// Append entry
 		else
@@ -379,7 +382,7 @@ void Candidate::append_entry_role(
 				Tracer::trace(">>>>>[RECEVIVED](Candidate." + std::to_string(((Server*)server_)->get_server_id()) + ") [AppendEntry::Rejected] Term is out of date " + std::to_string(argument_term) + " < " + std::to_string(((Server*)server_)->get_current_term()) + "\r\n", SeverityTrace::error_trace);
 			}
 			// And its terms is equal or highest than mine... 
-			if (argument_term >= ((Server*)server_)->get_current_term()) {
+			else if (argument_term >= ((Server*)server_)->get_current_term()) {
 				Tracer::trace(">>>>>[RECEVIVED](Candidate." + std::to_string(((Server*)server_)->get_server_id()) + ") [AppendEntry::Accepted] Received an append_entry claiming to be leader[term:" + std::to_string(argument_term) + " >= current_term:" + std::to_string(((Server*)server_)->get_current_term()) + "]\r\n");
 
 				*result_success = true;
@@ -388,6 +391,9 @@ void Candidate::append_entry_role(
 
 				// Inform server that state has changed to follower.  
 				((Server*)server_)->set_new_state(StateEnum::follower_state);
+			}
+			else {
+				Tracer::trace(">>>>>[RECEVIVED](Candidate." + std::to_string(((Server*)server_)->get_server_id()) + ") Unknown \r\n");
 			}
 		}
 	}
@@ -424,6 +430,9 @@ void Candidate::request_vote_role(
 			// Inform server that state has changed to follower.  
 			((Server*)server_)->set_new_state(StateEnum::follower_state);
 			there_is_leader_ = true;
+		}
+		else {
+			Tracer::trace(">>>>>[RECEVIVED](Candidate." + std::to_string(((Server*)server_)->get_server_id()) + ") Unknown \r\n");
 		}
 	}
 	else
