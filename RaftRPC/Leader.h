@@ -33,13 +33,16 @@ protected:
 	bool					have_to_die_;
 	bool					term_is_not_timeout_;
 
-	// Dispatchers
-	void					dispatch(ClientRequest* client_request);
-
 
 	std::thread				thread_send_heart_beat_all_servers_;	
 	void					send_heart_beat_all_servers();	
 	std::condition_variable cv_send_heart_beat_all_servers_;
+
+
+	// Dispatch
+	void					dispatch_client_request_leader(ClientRequest* client_request);
+	void					dispatch_client_request_value(ClientRequest* client_request);
+
 	
 
 	void append_entry_role(

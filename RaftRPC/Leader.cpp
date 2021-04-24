@@ -95,49 +95,41 @@ void Leader::send_msg_socket(ClientRequest* client_request, unsigned short port,
 	((Server*)server_)->send_msg_socket(client_request, port, sender, action, receiver);
 }
 
-void Leader::receive_msg_socket(ClientRequest* client_request)
+
+void Leader::dispatch_client_request_leader(ClientRequest* client_request)
 {
-	//dispatch(rpc);
+	// We are not Leader, so we reply with leader's id.( If I known it... )  	
+	client_request->client_result_ = true;
+	client_request->client_leader_ = ((Server*)server_)->get_current_leader_id();
+
+	send_msg_socket(client_request,
+		SOCKET_BASE_PORT + SOCKET_RECEIVER_PORT + client_request->client_id_,
+		std::string(SERVER_TEXT) + "(L)." + std::to_string(((Server*)server_)->get_server_id()),
+		std::string(HEART_BEAT_TEXT) + std::string("(") + std::string(INVOKE_TEXT) + std::string(")"),
+		std::string(CLIENT_TEXT) + "(Unique)." + std::to_string(client_request->client_id_)
+	);
 }
 
-//void Leader::dispatch_client_request_value(RaftSockets* rpc)
-//{
-//	if (rpc->rpc_direction == RPCDirection_sockets::rpc_in_invoke) {
-//
-//		// Write to log.
-//
-//		
-//		int client_value = rpc->client_request.client_value_;
-//		int ret = ((Server*)server_)->write_log(client_value);
-//		if (ret == MANAGER_NO_ERROR) {
-//			for (int num_server = 0; num_server < NUM_SERVERS; num_server++) {
-//				RaftSockets rpc;
-//				rpc.rpc_type = RPCTypeEnum_sockets::rpc_append_entry;
-//				rpc.rpc_direction = RPCDirection_sockets::rpc_in_invoke;
-//				rpc.append_entry.argument_term_				= ((Server*)server_)->get_current_term();													// Leader's term
-//				rpc.append_entry.argument_leader_id_		= ((Server*)server_)->get_server_id();														// So follower can redirect clients
-//				rpc.append_entry.argument_prev_log_index_	= ((Server*)server_)->get_log_index() - 1;													// Index of log entry immediately preceding	new ones
-//				rpc.append_entry.argument_prev_log_term_	= ((Server*)server_)->get_term_of_entry_in_log(((Server*)server_)->get_log_index() - 1);	// Term of argument_prev_log_index entry
-//				// TODO:
-//				rpc.append_entry.argument_entries_[0]		= 0;																				// Log entries to store(empty for heartbeat; may send more than one for efficiency)
-//				rpc.append_entry.argument_leader_commit_	= ((Server*)server_)->get_commit_index();													// Leader’s commitIndex
-//
-//				send(&rpc,
-//					BASE_PORT + RECEIVER_PORT + num_server,
-//					std::string(SERVER_TEXT) + "(L)." + std::to_string(((Server*)server_)->get_server_id()),
-//					std::string(APPEND_ENTRY_TEXT) + std::string("(") + std::string(INVOKE_TEXT) + std::string(")"),
-//					std::string(SERVER_TEXT) + "(ALL)." + std::to_string(num_server)
-//				);
-//			}
-//		}
-//		else {
-//			Tracer::trace("Leader::dispatch_client_request_value - FAILED to write log, error " + std::to_string(ret) + "\r\n");
-//		}
-//	}
-//	else if (rpc->rpc_direction == RPCDirection_sockets::rpc_out_result) {
-//		// N/A
-//	}
-//}
+void Leader::dispatch_client_request_value(ClientRequest* client_request)
+{
+	// N/A	
+}
+
+void Leader::receive_msg_socket(ClientRequest* client_request)
+{
+	// A client request a leader
+	if (client_request->client_request_type == ClientRequesTypeEnum::client_request_leader) {
+		dispatch_client_request_leader(client_request);
+	}
+	// A client request value
+	else if (client_request->client_request_type == ClientRequesTypeEnum::client_request_value) {
+		dispatch_client_request_value(client_request);
+	}
+	else
+		Tracer::trace("Follower::dispatch - Wrong!!! type " + std::to_string(static_cast<int>(client_request->client_request_type)) + "\r\n");
+}
+
+
 
 
 

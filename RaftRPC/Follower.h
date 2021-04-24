@@ -36,6 +36,12 @@ protected:
 	std::thread		thread_check_candidate_;
 
 
+	// Dispatch
+	void			dispatch_client_request_leader(ClientRequest* client_request);
+	void			dispatch_client_request_value(ClientRequest* client_request);
+
+
+
 	// RPC 	
 	void append_entry_role(
 		/* [in] */ int argument_term,

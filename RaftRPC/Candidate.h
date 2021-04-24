@@ -35,11 +35,10 @@ protected:
 
 	std::thread thread_send_request_vote_to_all_servers_;
 
-
-
-
+	// Dispatch
+	void dispatch_client_request_leader(ClientRequest* client_request);
+	void dispatch_client_request_value(ClientRequest* client_request);
 	
-
 
 	void append_entry_role(
 		/* [in] */ int argument_term,

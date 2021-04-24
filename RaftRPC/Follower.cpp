@@ -1,6 +1,7 @@
 #include "Follower.h"
 #include <thread>
 #include "Tracer.h"
+#include "ClientDefs.h"
 
 
 
@@ -63,10 +64,44 @@ void Follower::send_msg_socket(ClientRequest* client_request, unsigned short por
 	(((Server*)server_)->send_msg_socket(client_request, port, sender, action, receiver));
 }
 
+
+
+void Follower::dispatch_client_request_leader(ClientRequest* client_request)
+{
+	// We are not Leader, so we reply with leader's id.( If I known it... )  	
+	client_request->client_result_ = true;
+	client_request->client_leader_ = ((Server*)server_)->get_current_leader_id();
+
+	send_msg_socket(client_request,
+		SOCKET_BASE_PORT + SOCKET_RECEIVER_PORT + client_request->client_id_,
+		std::string(SERVER_TEXT) + "(L)." + std::to_string(((Server*)server_)->get_server_id()),
+		std::string(HEART_BEAT_TEXT) + std::string("(") + std::string(INVOKE_TEXT) + std::string(")"),
+		std::string(CLIENT_TEXT) + "(Unique)." + std::to_string(client_request->client_id_)
+	);
+}
+
+void Follower::dispatch_client_request_value(ClientRequest* client_request)
+{
+	// N/A	
+}
+
+
 void Follower::receive_msg_socket(ClientRequest* client_request)
 {	
-	//dispatch(rpc);
+	// A client request a leader
+	if (client_request->client_request_type == ClientRequesTypeEnum::client_request_leader) {
+		dispatch_client_request_leader(client_request);
+	}
+	// A client request value
+	else if (client_request->client_request_type == ClientRequesTypeEnum::client_request_value) {
+		dispatch_client_request_value(client_request);
+	}
+	else
+		Tracer::trace("Follower::dispatch - Wrong!!! type " + std::to_string(static_cast<int>(client_request->client_request_type)) + "\r\n");
 }
+
+
+
 
 		
 void Follower::append_entry_role(
