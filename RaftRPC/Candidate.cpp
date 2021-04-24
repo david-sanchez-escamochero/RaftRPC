@@ -151,13 +151,13 @@ void Candidate::send_request_vote_to_all_servers()
 	Tracer::trace("(Candidate." + std::to_string(((Server*)server_)->get_server_id()) + ") send_request_vote_to_all_servers FINISHED.\r\n");
 }
 
-void Candidate::send(ClientRequest* client_request, unsigned short port, std::string sender, std::string action, std::string receiver)
+void Candidate::send_msg_socket(ClientRequest* client_request, unsigned short port, std::string sender, std::string action, std::string receiver)
 {
-	((Server*)server_)->send(client_request, port, sender, action, receiver);
+	((Server*)server_)->send_msg_socket(client_request, port, sender, action, receiver);
 }
 
 
-void Candidate::receive(ClientRequest* client_request)
+void Candidate::receive_msg_socket(ClientRequest* client_request)
 {
 	
 }

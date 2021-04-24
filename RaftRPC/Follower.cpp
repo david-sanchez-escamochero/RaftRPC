@@ -58,12 +58,12 @@ void Follower::check_if_there_is_candidate_or_leader()
 }
 
 
-void Follower::send(ClientRequest* client_request, unsigned short port, std::string sender, std::string action, std::string receiver)
+void Follower::send_msg_socket(ClientRequest* client_request, unsigned short port, std::string sender, std::string action, std::string receiver)
 {
-	(((Server*)server_)->send(client_request, port, sender, action, receiver));
+	(((Server*)server_)->send_msg_socket(client_request, port, sender, action, receiver));
 }
 
-void Follower::receive(ClientRequest* client_request)
+void Follower::receive_msg_socket(ClientRequest* client_request)
 {	
 	//dispatch(rpc);
 }

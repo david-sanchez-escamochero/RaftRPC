@@ -9,8 +9,8 @@ class IRole {
 public:
     virtual ~IRole() {}
 	virtual void start()																	        						= 0;
-	virtual void send(ClientRequest* client_request, unsigned short port, std::string sender, std::string action, std::string receiver)	= 0;
-	virtual void receive(ClientRequest* client_request)																					= 0;
+	virtual void send_msg_socket(ClientRequest* client_request, unsigned short port, std::string sender, std::string action, std::string receiver)	= 0;
+	virtual void receive_msg_socket(ClientRequest* client_request)																					= 0;
     virtual void append_entry_role(
                                 /* [in] */ int argument_term,
                                 /* [in] */ int argument_leader_id,

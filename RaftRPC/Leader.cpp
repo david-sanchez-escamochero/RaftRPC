@@ -90,12 +90,12 @@ void Leader::send_heart_beat_all_servers()
 
 }
 
-void Leader::send(ClientRequest* client_request, unsigned short port, std::string sender, std::string action, std::string receiver)
+void Leader::send_msg_socket(ClientRequest* client_request, unsigned short port, std::string sender, std::string action, std::string receiver)
 {
-	((Server*)server_)->send(client_request, port, sender, action, receiver);
+	((Server*)server_)->send_msg_socket(client_request, port, sender, action, receiver);
 }
 
-void Leader::receive(ClientRequest* client_request)
+void Leader::receive_msg_socket(ClientRequest* client_request)
 {
 	//dispatch(rpc);
 }

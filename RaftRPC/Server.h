@@ -27,7 +27,7 @@ class Server
 public: 
 	Server(int server_id);
 	~Server();
-	void		send(ClientRequest* client_request, unsigned short port, std::string sender, std::string action, std::string receiver);	
+	void		send_msg_socket(ClientRequest* client_request, unsigned short port, std::string sender, std::string action, std::string receiver);
 	void		start();
 	IRole*		get_current_shape_sever(StateEnum state);
 	int			get_server_id();

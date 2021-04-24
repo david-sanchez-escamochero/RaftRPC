@@ -12,8 +12,7 @@ Communication::Communication() {
 }
 
 int Communication::sendMessage(ClientRequest* client_request, unsigned short port, std::string sender, std::string action, std::string receiver)
-{
-    return 0;
+{    
     WSADATA wsaData;
     SOCKET conn_socket;
     struct sockaddr_in server;
@@ -25,7 +24,7 @@ int Communication::sendMessage(ClientRequest* client_request, unsigned short por
     resp = WSAStartup(MAKEWORD(1, 0), &wsaData);
     if (resp) {
         str_trace = "[<<<<< Sent([" + action + "]" + sender + " -> " + receiver + "(" + std::to_string(port) + ")) - FAILED] - (Error socket initialization)\r\n";
-        Tracer::trace(str_trace);
+        Tracer::trace(str_trace, SeverityTrace::error_trace);
         return MSG_ERROR_INITIALIZATION_SOCKET;
     }
 
@@ -35,7 +34,7 @@ int Communication::sendMessage(ClientRequest* client_request, unsigned short por
 
     if (!hp) {      
         str_trace = "[<<<<< Sent([" + action + "]" + sender + " -> " + receiver + "(" + std::to_string(port) + "))  - FAILED] - (Server not found)\r\n";
-        Tracer::trace(str_trace);
+        Tracer::trace(str_trace, SeverityTrace::error_trace);
         WSACleanup(); return MSG_ERROR_UNKNOWN_SERVER;
     }
 
@@ -43,7 +42,7 @@ int Communication::sendMessage(ClientRequest* client_request, unsigned short por
     conn_socket = socket(AF_INET, SOCK_STREAM, 0);
     if (conn_socket == INVALID_SOCKET) {
         str_trace = "[<<<<< Sent([" + action + "]" + sender + " -> " + receiver + "(" + std::to_string(port) + "))   - FAILED] - (Wrong socket created)\r\n";
-        Tracer::trace(str_trace);
+        Tracer::trace(str_trace, SeverityTrace::error_trace);
         WSACleanup(); return MSG_ERROR_CREATE_SOCKET;
     }
 
@@ -55,7 +54,7 @@ int Communication::sendMessage(ClientRequest* client_request, unsigned short por
     // Nos conectamos con el servidor...
     if (connect(conn_socket, (struct sockaddr*) & server, sizeof(server)) == SOCKET_ERROR) {
         str_trace = "[<<<<< Sent([" + action + "]" + sender + " -> " + receiver + "(" + std::to_string(port) + "))    - FAILED] - (Failed to connect server)\r\n";
-        Tracer::trace(str_trace);
+        Tracer::trace(str_trace, SeverityTrace::error_trace);
         closesocket(conn_socket);
         WSACleanup(); return MSG_ERROR_FAILED_TO_CONNECT_SERVER;
     }
@@ -75,8 +74,7 @@ int Communication::sendMessage(ClientRequest* client_request, unsigned short por
 }
 
 int Communication::receiveMessage(ClientRequest* client_request, unsigned short port, std::string receiver)
-{
-    return 0;
+{    
     WSADATA wsaData;
     SOCKET conn_socket, comm_socket;
     //SOCKET comunicacion;
@@ -90,7 +88,7 @@ int Communication::receiveMessage(ClientRequest* client_request, unsigned short 
     resp = WSAStartup(MAKEWORD(1, 0), &wsaData);
     if (resp) {
         str_trace = "[>>>>> Received(" + receiver + "(" + std::to_string(port) + ")) - FAILED] - (Error socket initialization)\r\n";
-        Tracer::trace(str_trace);
+        Tracer::trace(str_trace, SeverityTrace::error_trace);
         return MSG_ERROR_INITIALIZATION_SOCKET;
     }
 
@@ -100,7 +98,7 @@ int Communication::receiveMessage(ClientRequest* client_request, unsigned short 
 
     if (!hp) {
         str_trace = "[>>>>> Received(" + receiver + "(" + std::to_string(port) + ")) - FAILED] (Server not found)\r\n";
-        Tracer::trace(str_trace);
+        Tracer::trace(str_trace, SeverityTrace::error_trace);
         WSACleanup(); return MSG_ERROR_UNKNOWN_SERVER;
     }
 
@@ -108,7 +106,7 @@ int Communication::receiveMessage(ClientRequest* client_request, unsigned short 
     conn_socket = socket(AF_INET, SOCK_STREAM, 0);
     if (conn_socket == INVALID_SOCKET) {
         str_trace = "[>>>>> Received(" + receiver + "(" + std::to_string(port) + ")) - FAILED](Wrong socket created)\r\n";
-        Tracer::trace(str_trace);
+        Tracer::trace(str_trace, SeverityTrace::error_trace);
         WSACleanup(); return MSG_ERROR_CREATE_SOCKET;
     }
 
@@ -121,14 +119,14 @@ int Communication::receiveMessage(ClientRequest* client_request, unsigned short 
     resp = bind(conn_socket, (struct sockaddr*) & server, sizeof(server));
     if (resp == SOCKET_ERROR) {
         str_trace = "[>>>>> Received(" + receiver + "(" + std::to_string(port) + ")) - FAILED] (Failed to bind server)\r\n";
-        Tracer::trace(str_trace);
+        Tracer::trace(str_trace, SeverityTrace::error_trace);
         closesocket(conn_socket); WSACleanup();
         return MSG_ERROR_TO_ASSOCIATE_PORT_AND_IP_SOCKET;
     }
 
     if (listen(conn_socket, 1) == SOCKET_ERROR) {
         str_trace = "[>>>>> Received(" + receiver + "(" + std::to_string(port) + ")) - FAILED] (Failed to listen server)\r\n";
-        Tracer::trace(str_trace);
+        Tracer::trace(str_trace, SeverityTrace::error_trace);
         closesocket(conn_socket); WSACleanup();
         return MSG_ERROR_TO_ENABLE_INGOING_CONNECTIONS;
     }
@@ -138,7 +136,7 @@ int Communication::receiveMessage(ClientRequest* client_request, unsigned short 
     comm_socket = accept(conn_socket, (struct sockaddr*) & client, &stsize);
     if (comm_socket == INVALID_SOCKET) {
         str_trace = "[>>>>> Received(" + receiver + "(" + std::to_string(port) + ")) - FAILED] (Failed to accept ingoing conection)\r\n";
-        Tracer::trace(str_trace);
+        Tracer::trace(str_trace, SeverityTrace::error_trace);
         closesocket(conn_socket); WSACleanup();
         return MSG_ERROR_TO_ACCEPT_INGOING_CONNECTIONS;
     }

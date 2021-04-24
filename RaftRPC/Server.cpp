@@ -48,7 +48,7 @@ Server::~Server()
 	}
 }
 
-void Server::send(ClientRequest* client_request, unsigned short port, std::string sender, std::string action, std::string receiver)
+void Server::send_msg_socket(ClientRequest* client_request, unsigned short port, std::string sender, std::string action, std::string receiver)
 {
 	communication_.sendMessage(client_request, port, sender, action, receiver);
 }
@@ -98,7 +98,7 @@ void Server::dispatch_msg_socket()
 			std::lock_guard<std::mutex> locker(mu_server_);
 
 			if (connector_ != nullptr) {	
-				connector_->receive(&client_request);
+				connector_->receive_msg_socket(&client_request);
 			}
 		}
 	}

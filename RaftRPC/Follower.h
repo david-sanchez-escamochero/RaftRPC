@@ -17,8 +17,8 @@ class Follower : public IRole
 public:
 	Follower(void* server);
 	~Follower();
-	void send(ClientRequest* client_request, unsigned short port, std::string sender, std::string action, std::string receiver);
-	void receive(ClientRequest* client_request);
+	void send_msg_socket(ClientRequest* client_request, unsigned short port, std::string sender, std::string action, std::string receiver);
+	void receive_msg_socket(ClientRequest* client_request);
 	void start();
 
 protected:
