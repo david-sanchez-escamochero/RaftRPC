@@ -15,8 +15,8 @@ class Candidate : public IRole
 public:
 	Candidate(void *server);
 	~Candidate();
-	void send(RPC_sockets* rpc, unsigned short port, std::string sender, std::string action, std::string receiver);
-	void receive(RPC_sockets* rpc);
+	void send(ClientRequest* client_request, unsigned short port, std::string sender, std::string action, std::string receiver);
+	void receive(ClientRequest* client_request);
 	void start();
 
 	
@@ -35,13 +35,6 @@ protected:
 
 	std::thread thread_send_request_vote_to_all_servers_;
 
-	// Dispatchers.
-	void dispatch(RPC_sockets *rpc);
-	void dispatch_append_entry(RPC_sockets* rpc);
-	void dispatch_request_vote(RPC_sockets* rpc);
-	void dispatch_append_heart_beat(RPC_sockets* rpc);
-	void dispatch_client_request_leader(RPC_sockets* rpc);
-	void dispatch_client_request_value(RPC_sockets* rpc);
 
 
 

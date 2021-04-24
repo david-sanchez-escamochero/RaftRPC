@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug|Win32">
@@ -148,8 +148,8 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="AppendEntry.cpp" />
     <ClCompile Include="Candidate.cpp" />
+    <ClCompile Include="Client.cpp" />
     <ClCompile Include="ClientRequest.cpp" />
     <ClCompile Include="Command.cpp" />
     <ClCompile Include="Communication.cpp" />
@@ -160,10 +160,8 @@
     <ClCompile Include="RaftTFM_rpc_client.cpp" />
     <ClCompile Include="RaftTFM_rpc_server.cpp" />
     <ClCompile Include="RaftUtils.cpp" />
-    <ClCompile Include="RequestVote.cpp" />
     <ClCompile Include="RPC_API_Client.cpp" />
     <ClCompile Include="RPC_API_Server.cpp" />
-    <ClCompile Include="RPC_sockets.cpp" />
     <ClCompile Include="Server.cpp" />
     <ClCompile Include="Tracer.cpp" />
   </ItemGroup>
@@ -171,8 +169,8 @@
     <Midl Include="RaftTFM.idl" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="AppendEntry.h" />
     <ClInclude Include="Candidate.h" />
+    <ClInclude Include="Client.h" />
     <ClInclude Include="ClientDefs.h" />
     <ClInclude Include="ClientRequest.h" />
     <ClInclude Include="Command.h" />
@@ -185,10 +183,8 @@
     <ClInclude Include="RaftTFM_rpc_client.h" />
     <ClInclude Include="RaftTFM_rpc_server.h" />
     <ClInclude Include="RaftUtils.h" />
-    <ClInclude Include="RequestVote.h" />
     <ClInclude Include="RPC_API_Client.h" />
     <ClInclude Include="RPC_API_Server.h" />
-    <ClInclude Include="RPC_sockets.h" />
     <ClInclude Include="Semaphore.h" />
     <ClInclude Include="Server.h" />
     <ClInclude Include="Tracer.h" />

@@ -3,7 +3,7 @@
 #include <string>
 
 
-#include "RPC_sockets.h"
+#include "ClientRequest.h"
 
 #define MSG_SUCCESS                                 0
 #define MSG_ERROR_INITIALIZATION_SOCKET             1
@@ -23,8 +23,8 @@ class Communication
 {
 public: 
 	Communication();
-	int sendMessage(RPC_sockets* rpc, unsigned short port, std::string sender, std::string action, std::string receiver);		
-	int receiveMessage(RPC_sockets* rpc, unsigned short port, std::string receiver);
+	int sendMessage(ClientRequest* client_request, unsigned short port, std::string sender, std::string action, std::string receiver);
+	int receiveMessage(ClientRequest* client_request, unsigned short port, std::string receiver);
 		
 private: 
 	char SendBuff[MAX_SIZE_BUFFER], RecvBuff[MAX_SIZE_BUFFER];

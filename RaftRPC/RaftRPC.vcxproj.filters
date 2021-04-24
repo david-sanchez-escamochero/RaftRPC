@@ -30,15 +30,6 @@
     <ClCompile Include="RPC_API_Server.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="RPC_sockets.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="AppendEntry.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="RequestVote.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="ClientRequest.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -69,6 +60,9 @@
     <ClCompile Include="RaftUtils.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="Client.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Midl Include="RaftTFM.idl">
@@ -86,15 +80,6 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="RPC_API_Server.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="RequestVote.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="RPC_sockets.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="AppendEntry.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="RaftDefs.h">
@@ -137,6 +122,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="RaftUtils.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Client.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

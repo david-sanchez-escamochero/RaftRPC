@@ -1,6 +1,6 @@
 #pragma once
 
-#include "RPC_sockets.h"
+#include "ClientRequest.h"
 #include <string>
 
 
@@ -9,8 +9,8 @@ class IRole {
 public:
     virtual ~IRole() {}
 	virtual void start()																	        						= 0;
-	virtual void send(RPC_sockets* rpc, unsigned short port, std::string sender, std::string action, std::string receiver)	= 0;
-	virtual void receive(RPC_sockets* rpc)																					= 0;	
+	virtual void send(ClientRequest* client_request, unsigned short port, std::string sender, std::string action, std::string receiver)	= 0;
+	virtual void receive(ClientRequest* client_request)																					= 0;
     virtual void append_entry_role(
                                 /* [in] */ int argument_term,
                                 /* [in] */ int argument_leader_id,

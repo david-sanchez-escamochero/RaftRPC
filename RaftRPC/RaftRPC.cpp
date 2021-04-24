@@ -7,7 +7,7 @@
 #include <string>
 #include "Communication.h"
 #include "RPC.h"
-//#include "Client.h"
+#include "Client.h"
 
 
 
@@ -54,19 +54,19 @@ int main(int argc, char** argv)
     }
     else {
         // If it is a Client. 
-        //if (std::stoi(argv[1]) > NUM_SERVERS) {
-        //    Tracer::trace("*************************\r\n");
-        //    Tracer::trace("   Starting RaftClient\r\n");
-        //    Tracer::trace("************************\r\n");
-        //    Client client;
-        //    if (!client.start(".\\..\\Debug\\numbers_starts_with_1.txt", std::stoi(argv[1])))
-        //        Tracer::trace("RaftClient - Failed to start. \r\n");
-        //}
+        if (std::stoi(argv[1]) > NUM_SERVERS) {
+            Tracer::trace("*************************\r\n");
+            Tracer::trace("   Starting RaftClient\r\n");
+            Tracer::trace("************************\r\n");
+            Client client;
+            if (!client.start(".\\..\\Debug\\numbers_starts_with_1.txt", std::stoi(argv[1])))
+                Tracer::trace("RaftClient - Failed to start. \r\n");
+        }
         // If it is a Server. 
-        //else {
+        else {
             Server server(std::stoi(argv[1]));
             server.start();
-        //}
+        }
     }
 }
 

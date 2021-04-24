@@ -39,8 +39,8 @@ Server::~Server()
 	semaphore_dispatch_.notify(SEMAPHORE_SERVER_DISPATCH);
 	semaphore_dispatch_.notify(SEMAPHORE_SERVER_NEW_STATE);
 
-	if (thread_server_dispatch_.joinable()) {
-		thread_server_dispatch_.join();
+	if (thread_dispatch_msg_socket_.joinable()) {
+		thread_dispatch_msg_socket_.join();
 	}
 
 	if (thread_check_new_state_.joinable()) {
@@ -48,9 +48,9 @@ Server::~Server()
 	}
 }
 
-void Server::send(RPC_sockets* rpc, unsigned short port, std::string sender, std::string action, std::string receiver)
+void Server::send(ClientRequest* client_request, unsigned short port, std::string sender, std::string action, std::string receiver)
 {
-	communication_.sendMessage(rpc, port, sender, action, receiver);
+	communication_.sendMessage(client_request, port, sender, action, receiver);
 }
 
 void Server::start() 
@@ -64,50 +64,64 @@ void Server::start()
 	// TEST.
 	//std::this_thread::sleep_for(std::chrono::milliseconds(30000));
 
-	// Start server thread. 
-	//thread_server_dispatch_ = std::thread(&Server::dispatch, this);	
+	// Start dispatch msg socket
+	thread_dispatch_msg_socket_ = std::thread(&Server::dispatch_msg_socket, this);	
+	// Start receive msg socket
+	thread_receive_msg_socket_ = std::thread(&Server::receive_msg_socket, this);
+
 
 	current_state_ = StateEnum::follower_state;
 	connector_ = get_current_shape_sever(current_state_);
 	if (connector_) {
 		connector_->start();
-		rpc_api_server_.start(this, BASE_PORT + RECEIVER_PORT + get_server_id());
+		rpc_api_server_.start(this, RPC_BASE_PORT + RPC_RECEIVER_PORT + get_server_id());
 	}
-
-
 
 	// Start server check new state
 	thread_check_new_state_ = std::thread(&Server::check_new_state, this);
 	
 
-	// Start new Rol(Follower at the beginning)
-	//set_new_state(StateEnum::follower_state);							
-
-
-	receive();	
+	receive_rpc();	
 }
 
 
-void Server::dispatch()
+void Server::dispatch_msg_socket()
 {
 	while(!have_to_die_)
 	{
 		semaphore_dispatch_.wait(SEMAPHORE_SERVER_DISPATCH);		
-		// Get rpc(FIFO)
-		RPC_sockets rpc = queue_.front();
+		// Get (FIFO)
+		ClientRequest client_request = queue_.front();
 		// Delete rcp from queue. 
 		queue_.pop();
 		{
 			std::lock_guard<std::mutex> locker(mu_server_);
 
 			if (connector_ != nullptr) {	
-				connector_->receive(&rpc);
+				connector_->receive(&client_request);
 			}
 		}
 	}
 }
 
-void Server::receive()
+void Server::receive_msg_socket()
+{
+	while (!have_to_die_) {
+		ClientRequest client_request;
+		int error = communication_.receiveMessage(&client_request, SOCKET_BASE_PORT + SOCKET_RECEIVER_PORT + server_id_, std::string(SERVER_TEXT) + std::string(".") + std::to_string(get_server_id()));
+
+		if (error) {
+			Tracer::trace("Follower::receive - FAILED!!!  - error" + std::to_string(error) + "\r\n");
+		}
+		else {
+			int xx = sizeof(client_request);
+			queue_.push(client_request);
+			semaphore_dispatch_.notify(SEMAPHORE_SERVER_DISPATCH);
+		}
+	}	
+}
+
+void Server::receive_rpc()
 {	
 	while (!have_to_die_)
 	{

@@ -8,10 +8,10 @@
 
 Communication::Communication() {
 
-    COMPILE_TIME_ASSERT(sizeof(RPC_sockets) > sizeof(MAX_SIZE_BUFFER));
+    COMPILE_TIME_ASSERT(sizeof(ClientRequest) > sizeof(MAX_SIZE_BUFFER));
 }
 
-int Communication::sendMessage(RPC_sockets* rpc, unsigned short port, std::string sender, std::string action, std::string receiver)
+int Communication::sendMessage(ClientRequest* client_request, unsigned short port, std::string sender, std::string action, std::string receiver)
 {
     return 0;
     WSADATA wsaData;
@@ -61,12 +61,12 @@ int Communication::sendMessage(RPC_sockets* rpc, unsigned short port, std::strin
     }
     
     
-    memcpy(SendBuff, reinterpret_cast<const char *>(rpc), sizeof(RPC_sockets));    
+    memcpy(SendBuff, reinterpret_cast<const char *>(client_request), sizeof(ClientRequest));    
 
     
     str_trace = "[<<<<< Sent([" + action + "]" + sender + " -> " + receiver + "(" + std::to_string(port) + "))    - OK]\r\n";
     Tracer::trace(str_trace);
-    send(conn_socket, SendBuff, sizeof(RPC_sockets), 0);    
+    send(conn_socket, SendBuff, sizeof(ClientRequest), 0);    
 
     // Cerramos el socket y liberamos la DLL de sockets
     closesocket(conn_socket);
@@ -74,7 +74,7 @@ int Communication::sendMessage(RPC_sockets* rpc, unsigned short port, std::strin
     return EXIT_SUCCESS;
 }
 
-int Communication::receiveMessage(RPC_sockets* rpc, unsigned short port, std::string receiver)
+int Communication::receiveMessage(ClientRequest* client_request, unsigned short port, std::string receiver)
 {
     return 0;
     WSADATA wsaData;
@@ -147,12 +147,12 @@ int Communication::receiveMessage(RPC_sockets* rpc, unsigned short port, std::st
     closesocket(conn_socket);
 
 
-    recv(comm_socket, RecvBuff, sizeof(RPC_sockets), 0);
-    RPC_sockets* rpc_aux = reinterpret_cast<RPC_sockets*>(RecvBuff);
-    *rpc = *rpc_aux;
-
+    recv(comm_socket, RecvBuff, sizeof(ClientRequest), 0);
+    ClientRequest* client_request_aux = reinterpret_cast<ClientRequest*>(RecvBuff);
+    *client_request = *client_request_aux;
         
-    str_trace = "[>>>>> Received [" + RaftUtils::parse_from_rcp_enum_to_text(rpc->rpc_type) + "] to (" + receiver + "(" + std::to_string(port) + ")) - from (" + std::string(SERVER_TEXT) + "." + std::to_string(rpc->server_id_origin) + ")   - OK] \r\n";
+    str_trace = "[>>>>> Received [" + RaftUtils::parse_from_rcp_enum_to_text(client_request->client_request_type) + "] to (" + receiver + "(" + std::to_string(port) + ")) - from (" + std::string(SERVER_TEXT) + "." + std::to_string(client_request->client_id_) + ")   - OK] \r\n";
+
     Tracer::trace(str_trace);
     // Cerramos el socket de la comunicacion
     closesocket(comm_socket);
