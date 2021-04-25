@@ -20,7 +20,7 @@ Server::Server(int server_id)
 	memset(&log_, 0, sizeof(log_));							// Log entries; each entry contains command for state machine, and term when entry was received by leader(first index is 1)
 	log_.command_[0].set_state_machime_command(NONE);
 	log_.command_[0].set_term_when_entry_was_received_by_leader(NONE);
-	log_.log_index_			= 1;
+	log_.log_index_			= 0;							// First index is 1, but when log writes increments + 1(So, first index is 1) 
 
 	current_leader_id_		= NONE;							// Current leader's id 
 
@@ -75,7 +75,7 @@ void Server::start()
 	thread_receive_msg_socket_ = std::thread(&Server::receive_msg_socket, this);
 
 
-	current_state_ = StateEnum::follower_state;
+	current_state_ = StateEnum::leader_state;
 	connector_ = get_current_shape_sever(current_state_);
 	if (connector_) {
 		connector_->start();
@@ -222,6 +222,11 @@ void Server::set_current_term(int term)
 	current_term_ = term;
 }
 
+void Server::set_commit_index(int commit_index)
+{
+	commit_index_ = commit_index;
+}
+
 
 int Server::get_commit_index()
 {
@@ -251,7 +256,7 @@ int  Server::write_log(int state_machine_command)
 	log_.command_[log_.log_index_].set_term_when_entry_was_received_by_leader(current_term_);
 	// Update state machine command. 
 	log_.command_[log_.log_index_].set_state_machime_command(state_machine_command);
-	// Wirte log. 
+	// Write log. 
 	int ret = manager_log_.write_log(file_log_name_, &log_, sizeof(log_));
 
 	if (ret) {
@@ -273,6 +278,11 @@ int Server::get_term_of_entry_in_log(int log_index)
 int Server::get_current_leader_id()
 {
 	return current_leader_id_;
+}
+
+int Server::get_state_machime_command(int log_index)
+{
+	return log_.command_[log_index].get_state_machime_command();
 }
 
 void Server::set_current_leader_id(int leader_id)
@@ -376,4 +386,12 @@ void Server::request_vote_server(
 				result_term,
 				result_vote_granted);
 		}
+}
+
+
+void Server::panic() {
+	while (true) {
+		Tracer::trace("Server(" + std::to_string(server_id_) + ") Panic\r\n", SeverityTrace::action_trace);
+		std::this_thread::sleep_for(std::chrono::milliseconds(3000));
+	}
 }

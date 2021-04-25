@@ -90,8 +90,10 @@ int RPC_API_Client::send_append_entry(
 )
 
 {      
-    RPC_STATUS status;
+    RPC_STATUS status = NO_ERROR;
+    RPC_STATUS status_exception = NO_ERROR;
     RPC_CSTR szStringBinding = NULL;
+    
     
     char port[6];    
     sprintf_s(port, "%d", port_target);    
@@ -142,8 +144,9 @@ int RPC_API_Client::send_append_entry(
         }
             RpcExcept(1)
         {
-            std::cerr << "Runtime reported exception " << RpcExceptionCode()
-                << std::endl;
+            status_exception = RpcExceptionCode();
+            std::cerr << "Runtime reported exception " << status_exception
+                << std::endl;            
         }
         RpcEndExcept
 
@@ -162,7 +165,10 @@ int RPC_API_Client::send_append_entry(
         if (status)
             return status;
 
-        return NO_ERROR;
+        if (status_exception)
+            status = status_exception;
+
+        return status;
 }
 
 

@@ -41,6 +41,7 @@ public:
 	void		set_current_term(int term);
 
 	int			get_commit_index();
+	void		set_commit_index(int commit_index);
 	int			get_last_applied();
 
 	// Get/set vote for. 
@@ -51,11 +52,14 @@ public:
 	int			write_log(int state_machine_command);
 	int			get_log_index();
 	int			get_term_of_entry_in_log(int log_index);
+	int			get_state_machime_command(int log_index);
 
 	// Leader 
 	int			current_leader_id_;
 	int			get_current_leader_id();
 	void		set_current_leader_id(int leader_id);
+
+	void		panic();
 
 
 	// RPC
@@ -130,6 +134,8 @@ protected:
 	// Volatile state on all servers. 
 	int							commit_index_;			// Index of highest log entry known to be committed(initialized to 0, increases	monotonically)
 	int							last_applied_;			// Index of highest log entry applied to state	machine(initialized to 0, increases	monotonically)	
+
+	
 	
 private: 
 	

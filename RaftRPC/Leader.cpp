@@ -36,6 +36,13 @@ void Leader::start()
 	((Server*)server_)->set_current_leader_id(((Server*)server_)->get_server_id());											
 
 	thread_send_heart_beat_all_servers_ = std::thread(&Leader::send_heart_beat_all_servers, this);
+
+	
+	
+	// Test...
+	ClientRequest client;
+	client.client_value_ = 69;
+	dispatch_client_request_value(&client);
 		
 }
 
@@ -119,9 +126,12 @@ void Leader::dispatch_client_request_leader(ClientRequest* client_request)
 
 void Leader::dispatch_client_request_value(ClientRequest* client_request)
 {
-
-	((Server*)server_)->write_log(client_request->client_value_);
-
+	if (((Server*)server_)->write_log(client_request->client_value_) != MANAGER_NO_ERROR) {
+		Tracer::trace("(Leader." + std::to_string(((Server*)server_)->get_server_id()) + ") FAILED to write log\r\n",SeverityTrace::error_trace);
+		((Server*)server_)->panic();
+	}
+	// Update commit_index_
+	((Server*)server_)->set_commit_index(((Server*)server_)->get_log_index());
 
 	if (thread_send_append_entry_all_server_.joinable()) {
 		thread_send_append_entry_all_server_have_to_die_ = true;
@@ -253,6 +263,9 @@ void Leader::request_vote_role(
 void Leader::send_append_entry_all_server() 
 {	
 
+	std::this_thread::sleep_for(std::chrono::milliseconds(10000));
+	
+
 	while (!thread_send_append_entry_all_server_have_to_die_)
 	{
 		for (int count = 0;( ( count < NUM_SERVERS ) && ( !thread_send_append_entry_all_server_have_to_die_ )  ); count++)
@@ -273,7 +286,7 @@ void Leader::send_append_entry_all_server()
 						int result_term;
 						int result_success;
 						int	argument_entries[1000];
-						argument_entries[0] = NONE;
+						argument_entries[0] = ((Server*)server_)->get_state_machime_command(((Server*)server_)->get_log_index());
 
 						int status = ((Server*)server_)->send_append_entry_rpc(
 							RPCTypeEnum::rpc_append_entry,
@@ -283,8 +296,8 @@ void Leader::send_append_entry_all_server()
 							RPC_BASE_PORT + RPC_RECEIVER_PORT + count,
 							((Server*)server_)->get_current_term(),														// Leader's term
 							((Server*)server_)->get_server_id(),														// So follower can redirect clients
-							next_index_[count],																			// Index of log entry immediately preceding	new ones
-							((Server*)server_)->get_term_of_entry_in_log(next_index_[count]),							// Term of argument_prev_log_index entry
+							next_index_[count] - 1,																		// Index of log entry immediately preceding	new ones
+							((Server*)server_)->get_term_of_entry_in_log(next_index_[count] -1),						// Term of argument_prev_log_index entry
 							argument_entries,																			// Log entries to store(empty for heartbeat; may send more than one for efficiency)
 							((Server*)server_)->get_commit_index(),														// Leader’s commitIndex
 							&result_term,
