@@ -30,12 +30,14 @@ protected:
 	int						match_index_[NUM_SERVERS];	// For each server, index of highest log entry known to be replicated on server	(initialized to 0, increases monotonically)
 	void*					server_;
 	std::mutex				mu_leader_;
-	bool					have_to_die_;
-	bool					term_is_not_timeout_;
+	bool					have_to_die_;	
 
 
 	std::thread				thread_send_heart_beat_all_servers_;	
+	std::thread				thread_send_append_entry_all_server_;
+	bool					thread_send_append_entry_all_server_have_to_die_;
 	void					send_heart_beat_all_servers();	
+	void					send_append_entry_all_server();
 	std::condition_variable cv_send_heart_beat_all_servers_;
 
 

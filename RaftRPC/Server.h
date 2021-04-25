@@ -18,7 +18,7 @@
 
 typedef struct {
 	int log_index_;
-	Command	 log_[MAX_LOG_ENTRIES];
+	Command	 command_[MAX_LOG_ENTRIES];
 }Log;
 
 class Server

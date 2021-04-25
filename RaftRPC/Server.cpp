@@ -16,7 +16,12 @@ Server::Server(int server_id)
 	// Persisten state on all servers. 
 	current_term_			= 0;							// Latest term server has seen (initialized to 0 on first boot, increases monotonically)
 	voted_for_				= NONE;							// CandidateId that received vote in current term(or null if none)
+	
 	memset(&log_, 0, sizeof(log_));							// Log entries; each entry contains command for state machine, and term when entry was received by leader(first index is 1)
+	log_.command_[0].set_state_machime_command(NONE);
+	log_.command_[0].set_term_when_entry_was_received_by_leader(NONE);
+	log_.log_index_			= 1;
+
 	current_leader_id_		= NONE;							// Current leader's id 
 
 	// Volatile state on all servers. 
@@ -113,8 +118,7 @@ void Server::receive_msg_socket()
 		if (error) {
 			Tracer::trace("Follower::receive - FAILED!!!  - error" + std::to_string(error) + "\r\n");
 		}
-		else {
-			int xx = sizeof(client_request);
+		else {			
 			queue_.push(client_request);
 			semaphore_dispatch_.notify(SEMAPHORE_SERVER_DISPATCH);
 		}
@@ -244,9 +248,9 @@ int  Server::write_log(int state_machine_command)
 	// Increment log index; 
 	log_.log_index_++;
 	// Update term for the entry.
-	log_.log_[log_.log_index_].set_term_when_entry_was_received_by_leader(current_term_);
+	log_.command_[log_.log_index_].set_term_when_entry_was_received_by_leader(current_term_);
 	// Update state machine command. 
-	log_.log_[log_.log_index_].set_state_machime_command(state_machine_command);
+	log_.command_[log_.log_index_].set_state_machime_command(state_machine_command);
 	// Wirte log. 
 	int ret = manager_log_.write_log(file_log_name_, &log_, sizeof(log_));
 
@@ -263,7 +267,7 @@ int Server::get_log_index()
 
 int Server::get_term_of_entry_in_log(int log_index)
 {
-	return log_.log_[log_index].get_term_when_entry_was_received_by_leader();
+	return log_.command_[log_index].get_term_when_entry_was_received_by_leader();
 }
 
 int Server::get_current_leader_id()

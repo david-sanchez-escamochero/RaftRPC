@@ -163,12 +163,14 @@ void Candidate::dispatch_client_request_leader(ClientRequest* client_request)
 	client_request->client_result_ = true;
 	client_request->client_leader_ = ((Server*)server_)->get_current_leader_id();
 
+
 	send_msg_socket(client_request,
 		SOCKET_BASE_PORT + SOCKET_RECEIVER_PORT + client_request->client_id_,
 		std::string(SERVER_TEXT) + "(L)." + std::to_string(((Server*)server_)->get_server_id()),
 		std::string(HEART_BEAT_TEXT) + std::string("(") + std::string(INVOKE_TEXT) + std::string(")"),
 		std::string(CLIENT_TEXT) + "(Unique)." + std::to_string(client_request->client_id_)
 	);
+	Tracer::trace("(Candidate." + std::to_string(((Server*)server_)->get_server_id()) + ") sending who is leader("+ std::to_string(((Server*)server_)->get_current_leader_id()) +") to client." + std::to_string(client_request->client_id_) +" .\r\n");
 }
 
 void Candidate::dispatch_client_request_value(ClientRequest* client_request)
@@ -206,7 +208,7 @@ void Candidate::append_entry_role(
 	if (!there_is_leader_) {
 
 		// Heart beat...(argument entries is empty.) 
-		if (argument_entries[0] == 0)
+		if (argument_entries[0] == NONE)
 		{
 			// If term is out of date
 			if (argument_term < ((Server*)server_)->get_current_term()) {
@@ -225,6 +227,7 @@ void Candidate::append_entry_role(
 				// Inform server that state has changed to follower.  
 				((Server*)server_)->set_new_state(StateEnum::follower_state);
 				((Server*)server_)->set_current_term(argument_term);
+				((Server*)server_)->set_current_leader_id(argument_leader_id);
 			}
 			else {
 				Tracer::trace(">>>>>[RECEVIVED](Candidate." + std::to_string(((Server*)server_)->get_server_id()) + ") Unknown \r\n", SeverityTrace::error_trace);
@@ -249,6 +252,9 @@ void Candidate::append_entry_role(
 
 				// Inform server that state has changed to follower.  
 				((Server*)server_)->set_new_state(StateEnum::follower_state);
+
+				((Server*)server_)->set_current_term(argument_term);
+				((Server*)server_)->set_current_leader_id(argument_leader_id);
 			}
 			else {
 				Tracer::trace(">>>>>[RECEVIVED](Candidate." + std::to_string(((Server*)server_)->get_server_id()) + ") Unknown \r\n", SeverityTrace::error_trace);

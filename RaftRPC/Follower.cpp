@@ -78,6 +78,7 @@ void Follower::dispatch_client_request_leader(ClientRequest* client_request)
 		std::string(HEART_BEAT_TEXT) + std::string("(") + std::string(INVOKE_TEXT) + std::string(")"),
 		std::string(CLIENT_TEXT) + "(Unique)." + std::to_string(client_request->client_id_)
 	);
+	Tracer::trace("(Follower." + std::to_string(((Server*)server_)->get_server_id()) + ") sending who is leader(" + std::to_string(((Server*)server_)->get_current_leader_id()) + ") to client." + std::to_string(client_request->client_id_) + " .\r\n");
 }
 
 void Follower::dispatch_client_request_value(ClientRequest* client_request)
@@ -116,14 +117,65 @@ void Follower::append_entry_role(
 	
 
 	// Heart beat...(argument entries is empty.) 
-	if (argument_entries[0] == NONE) {
-		last_time_stam_taken_miliseconds_ = duration_cast<milliseconds>(system_clock::now().time_since_epoch());
-		count_check_if_there_is_candidate_or_leader_ = 0;		
-		Tracer::trace(">>>>>[RECEVIVED](Follower." + std::to_string(((Server*)server_)->get_server_id()) + ") Received append entry(Heart-beat) to Server. \r\n", SeverityTrace::action_trace);
+	if (argument_entries[0] == 0)
+	{
+		// If term is out of date
+		if (argument_term < ((Server*)server_)->get_current_term()) {
+			*result_term = ((Server*)server_)->get_current_term();
+			*result_success = false;
+			Tracer::trace(">>>>>[RECEVIVED](Follower." + std::to_string(((Server*)server_)->get_server_id()) + ") [HeartBeat::Rejected] Term is out of date " + std::to_string(argument_term) + " < " + std::to_string(((Server*)server_)->get_current_term()) + "\r\n", SeverityTrace::error_trace);
+		}
+		// If I discover current leader or new term
+		else if (argument_term >= ((Server*)server_)->get_current_term()) {
+			last_time_stam_taken_miliseconds_ = duration_cast<milliseconds>(system_clock::now().time_since_epoch());
+			count_check_if_there_is_candidate_or_leader_ = 0;
+			Tracer::trace(">>>>>[RECEVIVED](Follower." + std::to_string(((Server*)server_)->get_server_id()) + ") Received append entry(Heart-beat) to Server. \r\n", SeverityTrace::action_trace);
+
+			*result_success = true;
+			((Server*)server_)->set_current_term(argument_term);
+			((Server*)server_)->set_current_leader_id(argument_leader_id);
+		}
+		else {
+			Tracer::trace(">>>>>[RECEVIVED](Follower." + std::to_string(((Server*)server_)->get_server_id()) + ") Unknown \r\n", SeverityTrace::error_trace);
+		}
 	}
-	// Append entry...
-	else {	
-	}
+	// Append entry
+	else
+	{
+		// If term is out of date
+		if (argument_term < ((Server*)server_)->get_current_term()) {
+			*result_term = ((Server*)server_)->get_current_term();
+			*result_success = false;
+			Tracer::trace(">>>>>[RECEVIVED](Follower." + std::to_string(((Server*)server_)->get_server_id()) + ") [AppendEntry::Rejected] Term is out of date " + std::to_string(argument_term) + " < " + std::to_string(((Server*)server_)->get_current_term()) + "\r\n", SeverityTrace::error_trace);
+		}
+		// And its terms is equal or highest than mine... 
+		else if (argument_term >= ((Server*)server_)->get_current_term()) {
+			Tracer::trace(">>>>>[RECEVIVED](Follower." + std::to_string(((Server*)server_)->get_server_id()) + ") [AppendEntry::Accepted] Received an append_entry claiming to be leader[term:" + std::to_string(argument_term) + " >= current_term:" + std::to_string(((Server*)server_)->get_current_term()) + "]\r\n");
+
+			// Replay false if log does not contain an entry at prevLogIndex whose term matches preLogTerm($5.3)
+			if ( argument_prev_log_index > ((Server*)server_)->get_log_index() ) {
+				*result_term = ((Server*)server_)->get_current_term();
+				*result_success = false;
+				Tracer::trace(">>>>>[RECEVIVED](Follower." + std::to_string(((Server*)server_)->get_server_id()) + ") [AppendEntry::Rejected] argument_prev_log_index: " + std::to_string(argument_prev_log_index) + " > ((Server*)server_)->get_log_index() " + std::to_string(((Server*)server_)->get_log_index()) + "\r\n", SeverityTrace::error_trace);
+			}
+			// If an existing entry conflict with a new one (same index but different terms), delete the existing entry and all that follow it ($5.3)
+			else if (argument_prev_log_term != ((Server*)server_)->get_term_of_entry_in_log(argument_prev_log_index))
+			{
+				*result_term = ((Server*)server_)->get_current_term();
+				*result_success = false;
+				Tracer::trace(">>>>>[RECEVIVED](Follower." + std::to_string(((Server*)server_)->get_server_id()) + ") [AppendEntry::Rejected] argument_prev_log_term:" + std::to_string(argument_prev_log_term) + " != get_term_of_entry_in_log(argument_prev_log_index): " + std::to_string(((Server*)server_)->get_term_of_entry_in_log(argument_prev_log_index)) + "\r\n", SeverityTrace::error_trace);
+			}
+			else {
+				*result_success = true;
+				((Server*)server_)->write_log(argument_entries[0]);
+				((Server*)server_)->set_current_term(argument_term);
+				((Server*)server_)->set_current_leader_id(argument_leader_id);
+			}
+		}
+		else {
+			Tracer::trace(">>>>>[RECEVIVED](Follower." + std::to_string(((Server*)server_)->get_server_id()) + ") Unknown \r\n", SeverityTrace::error_trace);
+		}
+	}	
 }
 
 
