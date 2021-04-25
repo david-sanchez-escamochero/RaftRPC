@@ -117,7 +117,7 @@ void Follower::append_entry_role(
 	
 
 	// Heart beat...(argument entries is empty.) 
-	if (argument_entries[0] == 0)
+	if (argument_entries[0] == NONE)
 	{
 		// If term is out of date
 		if (argument_term < ((Server*)server_)->get_current_term()) {
@@ -149,8 +149,7 @@ void Follower::append_entry_role(
 			Tracer::trace(">>>>>[RECEVIVED](Follower." + std::to_string(((Server*)server_)->get_server_id()) + ") [AppendEntry::Rejected] Term is out of date " + std::to_string(argument_term) + " < " + std::to_string(((Server*)server_)->get_current_term()) + "\r\n", SeverityTrace::error_trace);
 		}
 		// And its terms is equal or highest than mine... 
-		else if (argument_term >= ((Server*)server_)->get_current_term()) {
-			Tracer::trace(">>>>>[RECEVIVED](Follower." + std::to_string(((Server*)server_)->get_server_id()) + ") [AppendEntry::Accepted] Received an append_entry claiming to be leader[term:" + std::to_string(argument_term) + " >= current_term:" + std::to_string(((Server*)server_)->get_current_term()) + "]\r\n");
+		else if (argument_term >= ((Server*)server_)->get_current_term()) {			
 
 			// Replay false if log does not contain an entry at prevLogIndex whose term matches preLogTerm($5.3)
 			if ( argument_prev_log_index > ((Server*)server_)->get_log_index() ) {
@@ -170,6 +169,7 @@ void Follower::append_entry_role(
 				((Server*)server_)->write_log(argument_entries[0]);
 				((Server*)server_)->set_current_term(argument_term);
 				((Server*)server_)->set_current_leader_id(argument_leader_id);
+				Tracer::trace(">>>>>[RECEVIVED](Follower." + std::to_string(((Server*)server_)->get_server_id()) + ") [AppendEntry::Accepted] Accepted value\r\n", SeverityTrace::error_trace);
 			}
 		}
 		else {
