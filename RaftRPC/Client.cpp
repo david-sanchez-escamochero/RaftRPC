@@ -10,7 +10,7 @@
 Client::Client()
 {
     have_to_die_ = false;
-    leader_      = NO_LEADER_FOUND;
+    leader_      = NONE;
 }
 
 Client::~Client()
@@ -36,7 +36,7 @@ bool Client::start(std::string file_name, uint32_t client_id)
 
 void Client::find_a_leader() {
     bool ret = false;
-    leader_  = NO_LEADER_FOUND;
+    leader_  = NONE;
 
     // Start server receive leader 
     thread_server_receive_leader_ = std::thread(&Client::receive, this);
@@ -56,7 +56,7 @@ void Client::find_a_leader() {
         if (num_server == NUM_SERVERS)
             num_server = 0;
 
-    } while (leader_ == NO_LEADER_FOUND);    
+    } while (leader_ == NONE);    
 }
 
 void* Client::receive()
@@ -66,15 +66,21 @@ void* Client::receive()
         int error = communication_.receiveMessage(&client_request, SOCKET_BASE_PORT + SOCKET_RECEIVER_PORT + client_id_, LEADER_TEXT);
 
         if (error) {
-            Tracer::trace("Follower::receive - FAILED!!!  - error" + std::to_string(error) + "\r\n");
+            Tracer::trace("Client::receive - FAILED!!!  - error" + std::to_string(error) + "\r\n");
         }
         else {                        
             if (                
                 (client_request.client_request_type == ClientRequesTypeEnum::client_request_leader) &&
                 (client_request.client_result_ == (uint32_t)true)                
                 ) {
-                leader_ = client_request.client_leader_;
-                cv_found_a_leader_.notify_one();
+                if (client_request.client_leader_ == NONE) {
+                    Tracer::trace("Client - I do not know yet who is the leader\r\n", SeverityTrace::action_trace);
+                }
+                else {
+                    leader_ = client_request.client_leader_;
+                    Tracer::trace("Client - I have found a Leader: " + std::to_string(leader_) + "\r\n", SeverityTrace::action_trace);
+                    cv_found_a_leader_.notify_one();
+                }
             } 
             else if (                
                 (client_request.client_request_type == ClientRequesTypeEnum::client_request_value) &&
@@ -94,7 +100,7 @@ void Client::send_request_to_find_a_leader(uint32_t num_server) {
     client_request.client_request_type = ClientRequesTypeEnum::client_request_leader;
     client_request.client_id_ = client_id_;
 
-    int ret = NO_LEADER_FOUND;
+    int ret = NONE;
         
     ret = communication_.sendMessage(&client_request, SOCKET_BASE_PORT + SOCKET_RECEIVER_PORT + num_server, CLIENT_TEXT, CLIENT_REQUEST_LEADER_TEXT, LEADER_TEXT);
     if (ret) {
@@ -114,7 +120,7 @@ bool Client::send_request(std::string file_name, uint32_t leader_id)
 
         while (std::getline(infile, value))
         {
-            Tracer::trace("Value proposed:" + value + "\r\n");
+            Tracer::trace("Client - Value proposed:" + value + "\r\n", SeverityTrace::action_trace);
             
             std::this_thread::sleep_for(std::chrono::milliseconds(1000));
             
@@ -128,7 +134,7 @@ bool Client::send_request(std::string file_name, uint32_t leader_id)
                 int ret = 0;
                 do
                 {
-                    int ret = communication_.sendMessage(&client_request, RPC_BASE_PORT + RPC_RECEIVER_PORT + leader_id, CLIENT_TEXT, CLIENT_REQUEST_LEADER_TEXT, LEADER_TEXT);
+                    int ret = communication_.sendMessage(&client_request, SOCKET_BASE_PORT + SOCKET_RECEIVER_PORT + leader_id, CLIENT_TEXT, CLIENT_REQUEST_LEADER_TEXT, LEADER_TEXT);
                     if (ret) {
                         Tracer::trace("Client - Leader does not respond, error: " + std::to_string(ret) + "\r\n");
                     }
@@ -138,7 +144,7 @@ bool Client::send_request(std::string file_name, uint32_t leader_id)
                 } while (ret);
                 {
 
-                    // Time waiting servers replay saying who is the leader...
+                    // Time waiting servers replay if value is commited...
                     std::mutex mtx;
                     std::unique_lock<std::mutex> lck(mtx);
                     time_out = cv_committed_value_.wait_for(lck, std::chrono::milliseconds(TIME_WAITING_COMMIT_VALUE));
