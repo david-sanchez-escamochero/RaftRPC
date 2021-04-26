@@ -53,6 +53,7 @@ void Leader::send_heart_beat_all_servers()
 		// Send RPC's(Heart beat)in parallel to each of the other servers in the cluster. 
 		for (int count = 0; count < NUM_SERVERS; count++)
 		{
+			std::this_thread::sleep_for(std::chrono::milliseconds(1));
 			{
 				std::lock_guard<std::mutex> locker_leader(mu_leader_);
 
@@ -261,11 +262,7 @@ void Leader::request_vote_role(
 
 
 void Leader::send_append_entry_all_server() 
-{	
-
-	std::this_thread::sleep_for(std::chrono::milliseconds(10000));
-	
-
+{			
 	while (!thread_send_append_entry_all_server_have_to_die_)
 	{
 		for (int count = 0;( ( count < NUM_SERVERS ) && ( !thread_send_append_entry_all_server_have_to_die_ )  ); count++)
@@ -274,7 +271,7 @@ void Leader::send_append_entry_all_server()
 			if (match_index_[count] == ((Server*)server_)->get_commit_index()) {				
 				continue;
 			}
-
+			std::this_thread::sleep_for(std::chrono::milliseconds(1));
 			{
 				std::lock_guard<std::mutex> locker_leader(mu_leader_);
 
@@ -309,11 +306,19 @@ void Leader::send_append_entry_all_server()
 						}
 						else {
 							if (result_success) {
-								match_index_[count] = ((Server*)server_)->get_commit_index();
+								if (next_index_[count] < ((Server*)server_)->get_commit_index()) {
+									next_index_[count] = next_index_[count] + 1;
+									Tracer::trace("(Leader." + std::to_string(((Server*)server_)->get_server_id()) + ") Sent append entry(AppendEntry) to Server." + std::to_string(count) + " successfully(next_index_[" + std::to_string(count) + "] + 1 = " + std::to_string(next_index_[count]) + ").\r\n", SeverityTrace::action_trace);
+								}
+								else {
+									match_index_[count] = ((Server*)server_)->get_commit_index();
+									Tracer::trace("(Leader." + std::to_string(((Server*)server_)->get_server_id()) + ") Sent append entry(AppendEntry) to Server." + std::to_string(count) + " successfully( match_index_[" + std::to_string(count) + "]" + std::to_string(match_index_[count]) + " ).\r\n", SeverityTrace::action_trace);
+								}
 								Tracer::trace("(Leader." + std::to_string(((Server*)server_)->get_server_id()) + ") Sent append entry(AppendEntry) to Server." + std::to_string(count) + " successfully.\r\n", SeverityTrace::action_trace);
 							}
 							else {
 								next_index_[count] = next_index_[count] - 1;
+								Tracer::trace("(Leader." + std::to_string(((Server*)server_)->get_server_id()) + ") Sent append entry(AppendEntry) to Server." + std::to_string(count) + " Consisency check, next_index_[" + std::to_string(count) + "]:" + std::to_string(next_index_[count]) +".\r\n", SeverityTrace::warning_trace);
 							}
 						}
 					}

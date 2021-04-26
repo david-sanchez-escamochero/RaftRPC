@@ -1,6 +1,7 @@
 #include "RaftUtils.h"
 #include "ClientDefs.h"
 
+
 std::string RaftUtils::parse_state_to_string(StateEnum state) {
 	std::string str;
 	if (state == StateEnum::candidate_state)
@@ -16,7 +17,7 @@ std::string RaftUtils::parse_state_to_string(StateEnum state) {
 }
 
 
-std::string RaftUtils::parse_from_rcp_enum_to_text(ClientRequesTypeEnum type)
+std::string RaftUtils::parse_from_socket_enum_to_text(ClientRequesTypeEnum type)
 {
 	std::string ret;
 	switch (type) {
@@ -32,3 +33,24 @@ std::string RaftUtils::parse_from_rcp_enum_to_text(ClientRequesTypeEnum type)
 	}
 	return ret;
 }
+
+
+std::string RaftUtils::parse_from_rpc_enum_to_text(RPCTypeEnum type)
+{
+	std::string ret;
+	switch (type) {
+	case RPCTypeEnum::rpc_append_entry:
+		ret = std::string(APPEND_ENTRY_TEXT);
+		break;
+	case RPCTypeEnum::rpc_append_heart_beat:
+		ret = std::string(HEART_BEAT_TEXT);
+		break;
+	case RPCTypeEnum::rpc_append_request_vote:
+		ret = std::string(REQUEST_VOTE_TEXT);
+		break;
+	default:
+		ret = std::string(UNKNOWN_TEXT);
+	}
+	return ret;
+}
+
