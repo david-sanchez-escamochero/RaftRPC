@@ -75,7 +75,7 @@ void Server::start()
 	thread_receive_msg_socket_ = std::thread(&Server::receive_msg_socket, this);
 
 
-	current_state_ = StateEnum::leader_state;
+	current_state_ = StateEnum::follower_state;
 	connector_ = get_current_shape_sever(current_state_);
 	if (connector_) {
 		connector_->start();
@@ -267,7 +267,7 @@ int  Server::write_log(int state_machine_command)
 	string str_index;
 	string str_term;
 	string str_value;
-	for (int count = 0; count < log_.log_index_; count++) {
+	for (int count = 0; count <= log_.log_index_; count++) {
 
 		str_index += "\t|index:" + std::to_string(count)  + "|";
 		str_term +=  "\t|term :" + std::to_string(log_.command_[count].get_term_when_entry_was_received_by_leader()) + "|";
