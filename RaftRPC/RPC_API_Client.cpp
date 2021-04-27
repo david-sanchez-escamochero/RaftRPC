@@ -3,6 +3,7 @@
 #include "RaftTFM_rpc_client.h"
 #include <string>
 #include "Tracer.h"
+#include "RaftUtils.h"
 
 
 
@@ -12,7 +13,7 @@ int RPC_API_Client::send_append_entry_rpc(RPCTypeEnum rpc_type, RPCDirection rpc
     int ret = 999;
     try {
         //Just for debugging(Because if I do not do this, it does not complile.¿?
-        Tracer::trace("<<<<<[SEND] RPC(append_entry) from S." + std::to_string(server_id_origin) + " to S." + std::to_string(server_id_target) + "[port:" + std::to_string(port_target) + "]\r\n");
+        Tracer::trace("<<<<<[SEND] RPC - append_entry( " + RaftUtils::parse_from_rpc_enum_to_text(rpc_type) + ") from S." + std::to_string(server_id_origin) + " to S." + std::to_string(server_id_target) + "[port:" + std::to_string(port_target) + "]\r\n");
         ret = send_append_entry(
             // Only Debug
             rpc_type,

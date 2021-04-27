@@ -149,7 +149,7 @@ int Communication::receiveMessage(ClientRequest* client_request, unsigned short 
     ClientRequest* client_request_aux = reinterpret_cast<ClientRequest*>(RecvBuff);
     *client_request = *client_request_aux;
         
-    str_trace = "[>>>>> Received [" + RaftUtils::parse_from_rcp_enum_to_text(client_request->client_request_type) + "] to (" + receiver + "(" + std::to_string(port) + ")) - from (" + std::string(SERVER_TEXT) + "." + std::to_string(client_request->client_id_) + ")   - OK] \r\n";
+    str_trace = "[>>>>> Received [" + RaftUtils::parse_from_socket_enum_to_text(client_request->client_request_type) + "] to (" + receiver + "(" + std::to_string(port) + ")) - from (" + std::string(SERVER_TEXT) + "." + std::to_string(client_request->client_id_) + ")   - OK] \r\n";
 
     Tracer::trace(str_trace);
     // Cerramos el socket de la comunicacion
