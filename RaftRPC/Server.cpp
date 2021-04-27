@@ -66,6 +66,10 @@ void Server::start()
 		return;
 	}
 	
+	// Update commit_index_
+	set_commit_index(get_log_index());
+
+
 	// TEST.
 	//std::this_thread::sleep_for(std::chrono::milliseconds(30000));
 
@@ -75,7 +79,7 @@ void Server::start()
 	thread_receive_msg_socket_ = std::thread(&Server::receive_msg_socket, this);
 
 
-	current_state_ = StateEnum::leader_state;
+	current_state_ = StateEnum::follower_state;
 	connector_ = get_current_shape_sever(current_state_);
 	if (connector_) {
 		connector_->start();
@@ -237,6 +241,12 @@ int Server::get_last_applied()
 {
 	return last_applied_;
 }
+
+void Server::set_last_applied(int last_applied)
+{
+	last_applied_ = last_applied;
+}
+
 
 int32_t Server::get_voted_for()
 {

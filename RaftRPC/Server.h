@@ -43,6 +43,7 @@ public:
 	int			get_commit_index();
 	void		set_commit_index(int commit_index);
 	int			get_last_applied();
+	void		set_last_applied(int last_applied);
 
 	// Get/set vote for. 
 	int32_t		get_voted_for();	 

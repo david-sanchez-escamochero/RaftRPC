@@ -131,8 +131,10 @@ void Leader::dispatch_client_request_value(ClientRequest* client_request)
 		Tracer::trace("(Leader." + std::to_string(((Server*)server_)->get_server_id()) + ") FAILED to write log\r\n",SeverityTrace::error_trace);
 		((Server*)server_)->panic();
 	}
+
 	// Update commit_index_
 	((Server*)server_)->set_commit_index(((Server*)server_)->get_log_index());
+
 
 	if (thread_send_append_entry_all_server_.joinable()) {
 		thread_send_append_entry_all_server_have_to_die_ = true;
@@ -140,7 +142,10 @@ void Leader::dispatch_client_request_value(ClientRequest* client_request)
 	}
 
 	thread_send_append_entry_all_server_have_to_die_ = false;
-	thread_send_append_entry_all_server_ = std::thread(&Leader::send_append_entry_all_server, this);
+	thread_send_append_entry_all_server_ = std::thread(&Leader::send_append_entry_1th_phase, this);
+
+
+	client_request_ = *client_request;
 }
 
 void Leader::receive_msg_socket(ClientRequest* client_request)
@@ -261,14 +266,17 @@ void Leader::request_vote_role(
 }
 
 
-void Leader::send_append_entry_all_server() 
-{			
+void Leader::send_append_entry_1th_phase() 
+{		
+	int count_majority = 0;
+
 	while (!thread_send_append_entry_all_server_have_to_die_)
 	{
 		for (int count = 0;( ( count < NUM_SERVERS ) && ( !thread_send_append_entry_all_server_have_to_die_ )  ); count++)
 		{
 			// If server is updated. 
 			if (match_index_[count] == ((Server*)server_)->get_commit_index()) {				
+				count_majority++;
 				continue;
 			}
 			std::this_thread::sleep_for(std::chrono::milliseconds(1));
@@ -325,5 +333,26 @@ void Leader::send_append_entry_all_server()
 				}
 			}
 		}
+		if (count_majority >= MAJORITY) {
+			send_append_entry_2nd_phase(((Server*)server_)->get_state_machime_command(((Server*)server_)->get_log_index()));
+		}
 	}
+}
+
+
+void Leader::send_append_entry_2nd_phase(int argument_entries_to_state_machine)
+{
+	((Server*)server_)->set_last_applied(((Server*)server_)->get_last_applied() + 1);
+
+	Tracer::trace("*****************************************************************************************\r\n", SeverityTrace::action_trace);
+	Tracer::trace("*****************************************************************************************\r\n", SeverityTrace::action_trace);
+	Tracer::trace("*****************************************************************************************\r\n", SeverityTrace::action_trace);
+	Tracer::trace("(Leader." + std::to_string(((Server*)server_)->get_server_id()) + ") Applied "  + std::to_string(argument_entries_to_state_machine) + " to STATE MACHINE.\r\n", SeverityTrace::action_trace);
+	Tracer::trace("*****************************************************************************************\r\n", SeverityTrace::action_trace);
+	Tracer::trace("*****************************************************************************************\r\n", SeverityTrace::action_trace);
+	Tracer::trace("*****************************************************************************************\r\n", SeverityTrace::action_trace);
+
+
+
+	// Notify Client that values was executed to state machine. 
 }

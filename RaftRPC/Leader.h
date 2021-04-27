@@ -31,13 +31,15 @@ protected:
 	void*					server_;
 	std::mutex				mu_leader_;
 	bool					have_to_die_;	
+	ClientRequest		    client_request_;
+	void					send_append_entry_2nd_phase(int argument_entries_to_state_machine);
 
 
 	std::thread				thread_send_heart_beat_all_servers_;	
 	std::thread				thread_send_append_entry_all_server_;
 	bool					thread_send_append_entry_all_server_have_to_die_;
 	void					send_heart_beat_all_servers();	
-	void					send_append_entry_all_server();
+	void					send_append_entry_1th_phase();
 	std::condition_variable cv_send_heart_beat_all_servers_;
 
 
