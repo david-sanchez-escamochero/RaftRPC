@@ -67,12 +67,12 @@ void Candidate::send_request_vote_to_all_servers()
 							((Server*)server_)->get_server_id(),
 							count,
 							RPC_BASE_PORT + RPC_RECEIVER_PORT + count,
-							((Server*)server_)->get_current_term(),				// Candidate's term
-							((Server*)server_)->get_server_id(),				// Candidate requesting vote
-							((Server*)server_)->get_last_applied(),				// Index of candidate's last log entry (§5.4)
-							0,													// Term of candidate's last log entry (§5.4)
-							&result_term,										// CurrentTerm, for candidate to update itself
-							&result_vote_granted								// True means candidate received vote    
+							((Server*)server_)->get_current_term(),												// Candidate's term
+							((Server*)server_)->get_server_id(),												// Candidate requesting vote
+							((Server*)server_)->get_log_index(),												// Index of candidate's last log entry (§5.4)
+							((Server*)server_)->get_term_of_entry_in_log(((Server*)server_)->get_log_index()),	// Term of candidate's last log entry (§5.4)
+							&result_term,																		// CurrentTerm, for candidate to update itself
+							&result_vote_granted																// True means candidate received vote    
 						);
 
 						{

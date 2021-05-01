@@ -213,11 +213,11 @@ void Follower::request_vote_role(
 	// CandidateID is not null. 
 	// Candidate's log is at least as up-to-date receivers's log, grant vote.
 	else if (
-		(argument_term >= ((Server*)server_)->get_current_term()) &&
-		(argument_candidate_id != NONE)							 //&& 
-		//(rpc->request_vote.argument_last_log_index_ == 0)							 && TODO: ?¿?¿?¿?¿?¿?¿?¿?¿?¿?
-		//(rpc->request_vote.argument_last_log_term_ == 0)								TODO: ?¿?¿?¿?¿?¿?¿?¿?¿?¿?¿
-		)
+				( argument_term >= ((Server*)server_)->get_current_term() ) &&
+				( argument_candidate_id != NONE )	 && 
+				( argument_last_log_index >= ((Server*)server_)->get_log_index() ) &&												// Index of candidate's last log entry (§5.4)
+				( argument_last_log_term >= ((Server*)server_)->get_term_of_entry_in_log(((Server*)server_)->get_log_index()) )     // Term of candidate's last log entry (§5.4)
+	        )
 	{
 		((Server*)server_)->set_current_term(argument_term);
 		((Server*)server_)->set_voted_for(argument_candidate_id);
