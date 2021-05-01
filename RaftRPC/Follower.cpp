@@ -169,13 +169,7 @@ void Follower::append_entry_role(
 					*result_success = true;
 					((Server*)server_)->set_last_applied(((Server*)server_)->get_last_applied() + 1);
 
-					Tracer::trace("*****************************************************************************************\r\n", SeverityTrace::action_trace);
-					Tracer::trace("*****************************************************************************************\r\n", SeverityTrace::action_trace);
-					Tracer::trace("*****************************************************************************************\r\n", SeverityTrace::action_trace);
-					Tracer::trace("(Follower." + std::to_string(((Server*)server_)->get_server_id()) + ") Applied " + std::to_string(argument_entries[0]) + " to STATE MACHINE.\r\n", SeverityTrace::action_trace);
-					Tracer::trace("*****************************************************************************************\r\n", SeverityTrace::action_trace);
-					Tracer::trace("*****************************************************************************************\r\n", SeverityTrace::action_trace);
-					Tracer::trace("*****************************************************************************************\r\n", SeverityTrace::action_trace);
+					Tracer::trace("　　　　(Follower." + std::to_string(((Server*)server_)->get_server_id()) + ") Applied " + std::to_string(argument_entries[0]) + " to STATE MACHINE.!!!!!!!!\r\n", SeverityTrace::action_trace);
 				}
 				else {
 					*result_success = true;					
@@ -183,7 +177,7 @@ void Follower::append_entry_role(
 					((Server*)server_)->set_current_term(argument_term);
 					((Server*)server_)->set_current_leader_id(argument_leader_id);
 					((Server*)server_)->set_commit_index(((Server*)server_)->get_commit_index() + 1);
-					Tracer::trace(">>>>>[RECEVIVED](Follower." + std::to_string(((Server*)server_)->get_server_id()) + ") [AppendEntry::Accepted] Accepted value\r\n", SeverityTrace::error_trace);
+					Tracer::trace(">>>>>[RECEVIVED](Follower." + std::to_string(((Server*)server_)->get_server_id()) + ") [AppendEntry::Accepted] Accepted value\r\n", SeverityTrace::action_trace);
 				}
 			}
 		}
