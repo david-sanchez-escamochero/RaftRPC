@@ -165,11 +165,20 @@ void Follower::append_entry_role(
 				Tracer::trace(">>>>>[RECEVIVED](Follower." + std::to_string(((Server*)server_)->get_server_id()) + ") [AppendEntry::Rejected] argument_prev_log_term:" + std::to_string(argument_prev_log_term) + " != get_term_of_entry_in_log(argument_prev_log_index): " + std::to_string(((Server*)server_)->get_term_of_entry_in_log(argument_prev_log_index)) + "\r\n", SeverityTrace::error_trace);
 			}
 			else {
-				*result_success = true;
-				((Server*)server_)->write_log(argument_entries[0]);
-				((Server*)server_)->set_current_term(argument_term);
-				((Server*)server_)->set_current_leader_id(argument_leader_id);
-				Tracer::trace(">>>>>[RECEVIVED](Follower." + std::to_string(((Server*)server_)->get_server_id()) + ") [AppendEntry::Accepted] Accepted value\r\n", SeverityTrace::error_trace);
+				if (argument_leader_commit == ((Server*)server_)->get_commit_index()) {
+					*result_success = true;
+					((Server*)server_)->set_last_applied(((Server*)server_)->get_last_applied() + 1);
+
+					Tracer::trace("　　　　(Follower." + std::to_string(((Server*)server_)->get_server_id()) + ") Applied " + std::to_string(argument_entries[0]) + " to STATE MACHINE.!!!!!!!!\r\n", SeverityTrace::action_trace);
+				}
+				else {
+					*result_success = true;					
+					((Server*)server_)->write_log(argument_entries[0]);
+					((Server*)server_)->set_current_term(argument_term);
+					((Server*)server_)->set_current_leader_id(argument_leader_id);
+					((Server*)server_)->set_commit_index(((Server*)server_)->get_commit_index() + 1);
+					Tracer::trace(">>>>>[RECEVIVED](Follower." + std::to_string(((Server*)server_)->get_server_id()) + ") [AppendEntry::Accepted] Accepted value\r\n", SeverityTrace::action_trace);
+				}
 			}
 		}
 		else {
