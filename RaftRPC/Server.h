@@ -13,10 +13,9 @@
 #include "RPC_API_Server.h"
 #include "RPC_API_Client.h"
 
-
-
-
 typedef struct {
+	int current_term_;
+	int voted_for_;
 	int log_index_;
 	Command	 command_[MAX_LOG_ENTRIES];
 }Log;

@@ -65,6 +65,9 @@ void Server::start()
 		Tracer::trace("Server::start - FAILED!!! to read " + file_log_name_ +" log, stopping server...\r\n");
 		return;
 	}
+	// Update values from persistan state.
+	current_term_	= log_.current_term_;
+	voted_for_		= log_.voted_for_;
 	
 	// Update commit_index_
 	set_commit_index(get_log_index());
@@ -224,6 +227,15 @@ int Server::get_current_term()
 void Server::set_current_term(int term)
 {
 	current_term_ = term;
+	log_.current_term_ = term;
+	log_.voted_for_ = NONE;
+	voted_for_ = NONE;
+
+	int ret = manager_log_.write_log(file_log_name_, &log_, sizeof(log_));
+
+	if (ret) {
+		Tracer::trace("Server::set_current_term - FAILED!!! to write in log, error: " + std::to_string(ret) + "\r\n");
+	}
 }
 
 void Server::set_commit_index(int commit_index)
@@ -256,6 +268,12 @@ int32_t Server::get_voted_for()
 void Server::set_voted_for(int32_t vote_for)
 {
 	voted_for_ = vote_for;
+	log_.voted_for_ = vote_for;
+	int ret = manager_log_.write_log(file_log_name_, &log_, sizeof(log_));
+
+	if (ret) {
+		Tracer::trace("Server::set_voted_for - FAILED!!! to write in log, error: " + std::to_string(ret) + "\r\n");
+	}
 }
 
 int  Server::write_log(int state_machine_command)

@@ -1,5 +1,6 @@
 #include "ManagerLog.h"
 #include "Tracer.h"
+#include "Server.h"
 
 
 
@@ -10,6 +11,7 @@ ManagerLog::ManagerLog()
 
 int ManagerLog::write_log(std::string file_name, void* log, int size_to_write)
 {
+
     int ret = MANAGER_NO_ERROR;
     ofstream rlog(file_name, ios::out | ios::binary);
     if (!rlog) {
@@ -38,6 +40,10 @@ int ManagerLog::read_log(std::string file_name, void* log, int size_to_read)
     if (!rlog) {
         Tracer::trace("ManagerLog::read_log - FAILED!!! Cannot open file: " + file_name + ".\r\n");
         Tracer::trace("ManagerLog::read_log - Create default: " + file_name + " file.\r\n");
+        // Default values...        
+        ((Log*)log)->current_term_ = 0;
+        ((Log*)log)->voted_for_    = NONE;
+
         ret = write_log(file_name, log, size_to_read);        
     }
     else {
