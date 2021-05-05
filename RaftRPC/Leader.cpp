@@ -271,8 +271,9 @@ void Leader::send_append_entry_1th_phase()
 
 	while( ( !threads_have_to_die_ ) && ( count_followers_ack_to_value_sent < NUM_SERVERS - 1/*myself*/ ) )
 	{
+		printf("while send_append_entry_1th_phase\r\n");
 		for (int count = 0;( ( count < NUM_SERVERS ) && ( !threads_have_to_die_ )  ); count++)
-		{
+		{			
 			// If server is updated. 
 			if (match_index_[count] == ((Server*)server_)->get_commit_index()) {								
 				continue;
@@ -285,6 +286,8 @@ void Leader::send_append_entry_1th_phase()
 
 					// If the receiver is not equal to sender...
 					if (count != ((Server*)server_)->get_server_id()) {
+
+						printf("SEND send_append_entry_1th_phase: %d\r\n", count);
 
 						int result_term;
 						int result_success;
@@ -371,6 +374,7 @@ void Leader::send_append_entry_2nd_phase()
 	// Notify Client that values was executed to state machine. 
 	while ( ( !threads_have_to_die_ ) &&  ( !is_all_follower_applied_value_to_state_machine ) )
 	{
+		printf("while send_append_entry_2nd_phase\r\n");
 		for (int count = 0; ((count < NUM_SERVERS) && (!threads_have_to_die_)); count++)
 		{
 			// If server is not updated...
@@ -390,6 +394,8 @@ void Leader::send_append_entry_2nd_phase()
 
 					// If the receiver is not equal to sender...
 					if (count != ((Server*)server_)->get_server_id()) {
+
+						printf("SEND send_append_entry_2nd_phase: %d\r\n", count);
 
 						int result_term;
 						int result_success;
@@ -425,7 +431,7 @@ void Leader::send_append_entry_2nd_phase()
 				}
 			}
 		}
-		if (count_all_follower_apply_value_to_state_machine == NUM_SERVERS) {
+		if (count_all_follower_apply_value_to_state_machine == ( NUM_SERVERS - 1/*myself*/ )) {
 			is_all_follower_applied_value_to_state_machine = true;
 		}
 	}
