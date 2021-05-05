@@ -35,14 +35,7 @@ void Leader::start()
 	// I'm a leader.
 	((Server*)server_)->set_current_leader_id(((Server*)server_)->get_server_id());											
 
-	thread_send_heart_beat_all_servers_ = std::thread(&Leader::send_heart_beat_all_servers, this);
-
-	
-	
-	// Test...
-	ClientRequest client;
-	client.client_value_ = 69;
-	dispatch_client_request_value(&client);		
+	thread_send_heart_beat_all_servers_ = std::thread(&Leader::send_heart_beat_all_servers, this);		
 }
 
 void Leader::send_heart_beat_all_servers() 
@@ -276,7 +269,7 @@ void Leader::send_append_entry_1th_phase()
 	int	 count_followers_ack_to_value_sent					= 0;
 	bool first_time_achieve_majority_of_acks_from_followers	= false;
 
-	while( ( !threads_have_to_die_ ) && ( count_followers_ack_to_value_sent < NUM_SERVERS - 1/*Less me*/ ) )
+	while( ( !threads_have_to_die_ ) && ( count_followers_ack_to_value_sent < NUM_SERVERS - 1/*myself*/ ) )
 	{
 		for (int count = 0;( ( count < NUM_SERVERS ) && ( !threads_have_to_die_ )  ); count++)
 		{
