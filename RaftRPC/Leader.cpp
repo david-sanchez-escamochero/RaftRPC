@@ -276,6 +276,7 @@ void Leader::send_append_entry_1th_phase()
 		{			
 			// If server is updated. 
 			if (match_index_[count] == ((Server*)server_)->get_commit_index()) {								
+				std::this_thread::sleep_for(std::chrono::milliseconds(1000));
 				continue;
 			}
 			std::this_thread::sleep_for(std::chrono::milliseconds(1));
@@ -316,17 +317,20 @@ void Leader::send_append_entry_1th_phase()
 						else {
 							if (result_success) {
 								if (next_index_[count] < ((Server*)server_)->get_commit_index()) {
+									printf("(next_index_[count]:%d < ((Server*)server_)->get_commit_index():%d\r\n", next_index_[count], ((Server*)server_)->get_commit_index());
 									next_index_[count] = next_index_[count] + 1;
+									printf("next_index_[count] + 1 : %d\r\n", next_index_[count]);
 									Tracer::trace("(Leader." + std::to_string(((Server*)server_)->get_server_id()) + ") Sent append entry(AppendEntry) to Server." + std::to_string(count) + " successfully(next_index_[" + std::to_string(count) + "] + 1 = " + std::to_string(next_index_[count]) + ").\r\n", SeverityTrace::action_trace);
 								}
 								else {
 									match_index_[count] = ((Server*)server_)->get_commit_index();
+									printf("match_index_[count]: %d = ((Server*)server_)->get_commit_index();\r\n", match_index_[count]);
 									Tracer::trace("(Leader." + std::to_string(((Server*)server_)->get_server_id()) + ") Sent append entry(AppendEntry) to Server." + std::to_string(count) + " successfully( match_index_[" + std::to_string(count) + "]" + std::to_string(match_index_[count]) + " ).\r\n", SeverityTrace::action_trace);
-								}
-								Tracer::trace("(Leader." + std::to_string(((Server*)server_)->get_server_id()) + ") Sent append entry(AppendEntry) to Server." + std::to_string(count) + " successfully.\r\n", SeverityTrace::action_trace);
+								}								
 							}
 							else {
 								next_index_[count] = next_index_[count] - 1;
+								printf("next_index_[count] : %d = next_index_[count] - 1;\r\n", next_index_[count]);
 								Tracer::trace("(Leader." + std::to_string(((Server*)server_)->get_server_id()) + ") Sent append entry(AppendEntry) to Server." + std::to_string(count) + " Consisency check, next_index_[" + std::to_string(count) + "]:" + std::to_string(next_index_[count]) +".\r\n", SeverityTrace::warning_trace);
 							}
 						}
@@ -336,11 +340,13 @@ void Leader::send_append_entry_1th_phase()
 			// If server is updated. 
 			if (match_index_[count] == ((Server*)server_)->get_commit_index()) {
 				count_followers_ack_to_value_sent++;			
+				printf("count_followers_ack_to_value_sent: %d", count_followers_ack_to_value_sent);
 			}
 		}
 		if( (count_followers_ack_to_value_sent >= MAJORITY) && ( !first_time_achieve_majority_of_acks_from_followers ) ){
 			first_time_achieve_majority_of_acks_from_followers = true;	
 			thread_send_append_entry_2nd_phase_ = std::thread(&Leader::send_append_entry_2nd_phase, this);
+			printf("(count_followers_ack_to_value_sent >= MAJORITY)");
 		}
 	}
 }
@@ -379,10 +385,12 @@ void Leader::send_append_entry_2nd_phase()
 		{
 			// If server is not updated...
 			if (match_index_[count] != ((Server*)server_)->get_commit_index()) {
+				std::this_thread::sleep_for(std::chrono::milliseconds(1000));
 				continue;
 			}
 			// If server is updated, but it is already applied to state machine...
 			if( ( match_index_[count] == ((Server*)server_)->get_commit_index() ) && ( folllowers_applied_value_to_state_machine[count] == true ) )  {
+				std::this_thread::sleep_for(std::chrono::milliseconds(1000));
 				continue;
 			}
 
@@ -432,6 +440,7 @@ void Leader::send_append_entry_2nd_phase()
 			}
 		}
 		if (count_all_follower_apply_value_to_state_machine == ( NUM_SERVERS - 1/*myself*/ )) {
+			printf("(count_all_follower_apply_value_to_state_machine == ( NUM_SERVERS - 1/*myself*/ ))\r\n");
 			is_all_follower_applied_value_to_state_machine = true;
 		}
 	}

@@ -82,7 +82,7 @@ void Server::start()
 	thread_receive_msg_socket_ = std::thread(&Server::receive_msg_socket, this);
 
 
-	current_state_ = StateEnum::follower_state;
+	current_state_ = StateEnum::leader_state;
 	connector_ = get_current_shape_sever(current_state_);
 	if (connector_) {
 		connector_->start();
@@ -352,6 +352,10 @@ int Server::send_append_entry_rpc(	RPCTypeEnum rpc_type,
 									int* result_term, 
 									int* result_success)
 {
+	Tracer::trace("SENT(AE) port_target:" + std::to_string(port_target) + ", term:" + std::to_string(argument_term) + ", leader_id:" + std::to_string(argument_leader_id) + ", prev_log_index:" + std::to_string(argument_prev_log_index) + ", prev_log_term:" + std::to_string(argument_prev_log_term) + ", entries:" + std::to_string(argument_entries[0]) + ", leader_commit:" + std::to_string(argument_leader_commit) + "\r\n");
+
+
+
 	return rpc_api_client_.send_append_entry_rpc(
 		rpc_type,
 		rpc_direction,
