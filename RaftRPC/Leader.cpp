@@ -269,7 +269,7 @@ void Leader::send_append_entry_1th_phase()
 	int	 count_followers_ack_to_value_sent					= 0;
 	bool first_time_achieve_majority_of_acks_from_followers	= false;
 
-	while( ( !threads_have_to_die_ ) && ( count_followers_ack_to_value_sent < NUM_SERVERS - 1/*myself*/ ) )
+	while( ( !threads_have_to_die_ ) && ( count_followers_ack_to_value_sent < ( NUM_SERVERS - 1/*myself*/ ) ) )
 	{
 		printf("while send_append_entry_1th_phase\r\n");
 		for (int count = 0;( ( count < NUM_SERVERS ) && ( !threads_have_to_die_ )  ); count++)
@@ -324,6 +324,7 @@ void Leader::send_append_entry_1th_phase()
 								}
 								else {
 									match_index_[count] = ((Server*)server_)->get_commit_index();
+									next_index_[count] = next_index_[count] + 1;
 									printf("match_index_[count]: %d = ((Server*)server_)->get_commit_index();\r\n", match_index_[count]);
 									Tracer::trace("(Leader." + std::to_string(((Server*)server_)->get_server_id()) + ") Sent append entry(AppendEntry) to Server." + std::to_string(count) + " successfully( match_index_[" + std::to_string(count) + "]" + std::to_string(match_index_[count]) + " ).\r\n", SeverityTrace::action_trace);
 								}								
