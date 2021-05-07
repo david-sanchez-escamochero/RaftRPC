@@ -276,6 +276,7 @@ void Leader::send_append_entry_1th_phase()
 		{			
 			// If server is updated. 
 			if (match_index_[count] == ((Server*)server_)->get_commit_index()) {								
+				std::this_thread::sleep_for(std::chrono::milliseconds(1000));
 				continue;
 			}
 			std::this_thread::sleep_for(std::chrono::milliseconds(1));
@@ -322,8 +323,7 @@ void Leader::send_append_entry_1th_phase()
 								else {
 									match_index_[count] = ((Server*)server_)->get_commit_index();
 									Tracer::trace("(Leader." + std::to_string(((Server*)server_)->get_server_id()) + ") Sent append entry(AppendEntry) to Server." + std::to_string(count) + " successfully( match_index_[" + std::to_string(count) + "]" + std::to_string(match_index_[count]) + " ).\r\n", SeverityTrace::action_trace);
-								}
-								Tracer::trace("(Leader." + std::to_string(((Server*)server_)->get_server_id()) + ") Sent append entry(AppendEntry) to Server." + std::to_string(count) + " successfully.\r\n", SeverityTrace::action_trace);
+								}								
 							}
 							else {
 								next_index_[count] = next_index_[count] - 1;
@@ -379,10 +379,12 @@ void Leader::send_append_entry_2nd_phase()
 		{
 			// If server is not updated...
 			if (match_index_[count] != ((Server*)server_)->get_commit_index()) {
+				std::this_thread::sleep_for(std::chrono::milliseconds(1000));
 				continue;
 			}
 			// If server is updated, but it is already applied to state machine...
 			if( ( match_index_[count] == ((Server*)server_)->get_commit_index() ) && ( folllowers_applied_value_to_state_machine[count] == true ) )  {
+				std::this_thread::sleep_for(std::chrono::milliseconds(1000));
 				continue;
 			}
 

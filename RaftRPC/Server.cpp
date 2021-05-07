@@ -352,6 +352,7 @@ int Server::send_append_entry_rpc(	RPCTypeEnum rpc_type,
 									int* result_term, 
 									int* result_success)
 {
+	Tracer::trace("SENT APPEND ENTRY RPC\r\n");
 	return rpc_api_client_.send_append_entry_rpc(
 		rpc_type,
 		rpc_direction,

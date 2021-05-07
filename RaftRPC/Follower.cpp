@@ -116,9 +116,12 @@ void Follower::append_entry_role(
 	/* [out] */ int* result_success) {
 	
 
+	Tracer::trace("RECEIVED(AE)\r\n");
+
 	// Heart beat...(argument entries is empty.) 
 	if (argument_entries[0] == NONE)
 	{
+		Tracer::trace("RECEIVED(AE - HB)\r\n");
 		// If term is out of date
 		if (argument_term < ((Server*)server_)->get_current_term()) {
 			*result_term = ((Server*)server_)->get_current_term();
@@ -142,6 +145,7 @@ void Follower::append_entry_role(
 	// Append entry
 	else
 	{
+		Tracer::trace("RECEIVED(AE - AE)\r\n");
 		// If term is out of date
 		if (argument_term < ((Server*)server_)->get_current_term()) {
 			*result_term = ((Server*)server_)->get_current_term();
@@ -164,19 +168,26 @@ void Follower::append_entry_role(
 				*result_success = false;
 				Tracer::trace(">>>>>[RECEVIVED](Follower." + std::to_string(((Server*)server_)->get_server_id()) + ") [AppendEntry::Rejected] argument_prev_log_term:" + std::to_string(argument_prev_log_term) + " != get_term_of_entry_in_log(argument_prev_log_index): " + std::to_string(((Server*)server_)->get_term_of_entry_in_log(argument_prev_log_index)) + "\r\n", SeverityTrace::error_trace);
 			}
-			else {
+			else {				
 				if (argument_leader_commit == ((Server*)server_)->get_commit_index()) {
+					printf("ENTRA 1\r\n");
+					printf("argument_leader_commit %d== ((Server*)server_)->get_commit_index(): %d\r\n", argument_leader_commit, ((Server*)server_)->get_commit_index());
 					*result_success = true;
 					((Server*)server_)->set_last_applied(((Server*)server_)->get_last_applied() + 1);
-
+					printf("((Server*)server_)->set_last_applied(((Server*)server_)->get_last_applied() + 1):%d\r\n", ((Server*)server_)->get_last_applied());
 					Tracer::trace("　　　　(Follower." + std::to_string(((Server*)server_)->get_server_id()) + ") Applied " + std::to_string(argument_entries[0]) + " to STATE MACHINE.!!!!!!!!\r\n", SeverityTrace::action_trace);
 				}
-				else {
+				else {					
+					printf("ENTRA 2\r\n");
 					*result_success = true;					
 					((Server*)server_)->write_log(argument_entries[0]);
+					printf("write_log\r\n");
 					((Server*)server_)->set_current_term(argument_term);
+					printf("((Server*)server_)->set_current_term(%d);\r\n", argument_term);
 					((Server*)server_)->set_current_leader_id(argument_leader_id);
+					printf("(((Server*)server_)->set_current_leader_id(argument_leader_id):%d\r\n", argument_leader_id);
 					((Server*)server_)->set_commit_index(((Server*)server_)->get_commit_index() + 1);
+					printf("((Server*)server_)->set_commit_index(((Server*)server_)->get_commit_index() + 1): %d", ((Server*)server_)->get_commit_index());
 					Tracer::trace(">>>>>[RECEVIVED](Follower." + std::to_string(((Server*)server_)->get_server_id()) + ") [AppendEntry::Accepted] Accepted value\r\n", SeverityTrace::action_trace);
 				}
 			}
