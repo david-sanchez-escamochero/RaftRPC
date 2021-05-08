@@ -65,6 +65,12 @@ void Server::start()
 		Tracer::trace("Server::start - FAILED!!! to read " + file_log_name_ +" log, stopping server...\r\n");
 		return;
 	}
+	
+	Tracer::trace("current term: " + std::to_string(log_.current_term_) + "\r\n");
+	Tracer::trace("log index: " + std::to_string(log_.log_index_) + "\r\n");
+	Tracer::trace("voted for: " + std::to_string(log_.voted_for_) + "\r\n");
+	
+
 	// Update values from persistan state.
 	current_term_	= log_.current_term_;
 	voted_for_		= log_.voted_for_;
@@ -82,7 +88,7 @@ void Server::start()
 	thread_receive_msg_socket_ = std::thread(&Server::receive_msg_socket, this);
 
 
-	current_state_ = StateEnum::leader_state;
+	current_state_ = StateEnum::follower_state;
 	connector_ = get_current_shape_sever(current_state_);
 	if (connector_) {
 		connector_->start();
@@ -214,8 +220,9 @@ void Server::set_new_state(StateEnum state)
 }
 
 void Server::increment_current_term()
-{	
+{
 	current_term_++;
+	set_current_term(current_term_);	
 	Tracer::trace("Server(" + std::to_string(server_id_) + ") Increment term from " + std::to_string(current_term_ - 1) + " to " + std::to_string(current_term_) + "\r\n", SeverityTrace::action_trace);
 }
 

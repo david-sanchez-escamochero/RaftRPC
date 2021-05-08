@@ -125,8 +125,9 @@ void Candidate::send_request_vote_to_all_servers()
 					}
 				}
 			}
-			int ramdom_timeout = (rand() % 3000) + 3000;
+			int ramdom_timeout = (rand() % MINIMUM_VALUE_RAMDOM_TIME_OUT) + MINIMUM_VALUE_RAMDOM_TIME_OUT;
 			std::this_thread::sleep_for(std::chrono::milliseconds(ramdom_timeout));
+			Tracer::trace("ramdom_timeout(1): " + std::to_string(ramdom_timeout) + "\r\n");
 		}
 
 		{
@@ -142,6 +143,7 @@ void Candidate::send_request_vote_to_all_servers()
 				srand((unsigned int)time(NULL));
 				// 150-300(ms). 
 				int ramdom_timeout = (rand() % MINIMUM_VALUE_RAMDOM_TIME_OUT) + MINIMUM_VALUE_RAMDOM_TIME_OUT;
+				Tracer::trace("ramdom_timeout(2): " + std::to_string(ramdom_timeout)+"\r\n");
 				std::this_thread::sleep_for(std::chrono::milliseconds(ramdom_timeout));
 				last_time_stam_taken_miliseconds_ = duration_cast<milliseconds>(system_clock::now().time_since_epoch());
 			}
