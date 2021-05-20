@@ -129,6 +129,7 @@ void Leader::dispatch_client_request_value(ClientRequest* client_request)
 	((Server*)server_)->set_commit_index(((Server*)server_)->get_log_index());
 
 
+
 	if (thread_send_append_entry_1th_phase_.joinable()) {
 		threads_have_to_die_ = true;
 		thread_send_append_entry_1th_phase_.join();
@@ -266,16 +267,15 @@ void Leader::request_vote_role(
 
 void Leader::send_append_entry_1th_phase() 
 {		
-	int	 count_followers_ack_to_value_sent					= 0;
-	bool first_time_achieve_majority_of_acks_from_followers	= false;
+	int	 count_followers_ack_to_value_sent					= 0;	
 
 	while( ( !threads_have_to_die_ ) && ( count_followers_ack_to_value_sent < ( NUM_SERVERS - 1/*myself*/ ) ) )
 	{
 		printf("while send_append_entry_1th_phase\r\n");
-		for (int count = 0;( ( count < NUM_SERVERS ) && ( !threads_have_to_die_ )  ); count++)
+		for (int server = 0;( ( server < NUM_SERVERS ) && ( !threads_have_to_die_ )  ); server++)
 		{			
 			// If server is updated. 
-			if (match_index_[count] == ((Server*)server_)->get_commit_index()) {								
+			if (match_index_[server] == ((Server*)server_)->get_commit_index()) {								
 				std::this_thread::sleep_for(std::chrono::milliseconds(1000));
 				continue;
 			}
@@ -286,9 +286,9 @@ void Leader::send_append_entry_1th_phase()
 				if (!threads_have_to_die_) {
 
 					// If the receiver is not equal to sender...
-					if (count != ((Server*)server_)->get_server_id()) {
+					if (server != ((Server*)server_)->get_server_id()) {
 
-						printf("SEND send_append_entry_1th_phase: %d\r\n", count);
+						printf("SEND send_append_entry_1th_phase: %d\r\n", server);
 
 						int result_term;
 						int result_success;
@@ -299,12 +299,12 @@ void Leader::send_append_entry_1th_phase()
 							RPCTypeEnum::rpc_append_entry,
 							RPCDirection::rpc_in_invoke,
 							((Server*)server_)->get_server_id(),
-							count,
-							RPC_BASE_PORT + RPC_RECEIVER_PORT + count,
+							server,
+							RPC_BASE_PORT + RPC_RECEIVER_PORT + server,
 							((Server*)server_)->get_current_term(),														// Leader's term
 							((Server*)server_)->get_server_id(),														// So follower can redirect clients
-							next_index_[count] - 1,																		// Index of log entry immediately preceding	new ones
-							((Server*)server_)->get_term_of_entry_in_log(next_index_[count] -1),						// Term of argument_prev_log_index entry
+							next_index_[server] - 1,																		// Index of log entry immediately preceding	new ones
+							((Server*)server_)->get_term_of_entry_in_log(next_index_[server] -1),						// Term of argument_prev_log_index entry
 							argument_entries,																			// Log entries to store(empty for heartbeat; may send more than one for efficiency)
 							((Server*)server_)->get_commit_index(),														// Leader’s commitIndex
 							&result_term,
@@ -316,133 +316,245 @@ void Leader::send_append_entry_1th_phase()
 						}
 						else {
 							if (result_success) {
-								if (next_index_[count] < ((Server*)server_)->get_commit_index()) {
-									printf("(next_index_[count]:%d < ((Server*)server_)->get_commit_index():%d\r\n", next_index_[count], ((Server*)server_)->get_commit_index());
-									next_index_[count] = next_index_[count] + 1;
-									printf("next_index_[count] + 1 : %d\r\n", next_index_[count]);
-									Tracer::trace("(Leader." + std::to_string(((Server*)server_)->get_server_id()) + ") Sent append entry(AppendEntry) to Server." + std::to_string(count) + " successfully(next_index_[" + std::to_string(count) + "] + 1 = " + std::to_string(next_index_[count]) + ").\r\n", SeverityTrace::action_trace);
+								if (next_index_[server] < ((Server*)server_)->get_commit_index()) {
+									match_index_[server] = next_index_[server];
+									printf("(next_index_[count]:%d < ((Server*)server_)->get_commit_index():%d\r\n", next_index_[server], ((Server*)server_)->get_commit_index());									
+									next_index_[server] = next_index_[server] + 1;
+									printf("next_index_[count] + 1 : %d\r\n", next_index_[server]);
+									Tracer::trace("(Leader." + std::to_string(((Server*)server_)->get_server_id()) + ") Sent append entry(AppendEntry) to Server." + std::to_string(server) + " successfully(next_index_[" + std::to_string(server) + "] + 1 = " + std::to_string(next_index_[server]) + ").\r\n", SeverityTrace::action_trace);																		
+
+									send_append_entry_2nd_phase(match_index_[server], server);
 								}
 								else {
-									match_index_[count] = ((Server*)server_)->get_commit_index();
-									next_index_[count] = next_index_[count] + 1;
-									printf("match_index_[count]: %d = ((Server*)server_)->get_commit_index();\r\n", match_index_[count]);
-									Tracer::trace("(Leader." + std::to_string(((Server*)server_)->get_server_id()) + ") Sent append entry(AppendEntry) to Server." + std::to_string(count) + " successfully( match_index_[" + std::to_string(count) + "]" + std::to_string(match_index_[count]) + " ).\r\n", SeverityTrace::action_trace);
+									match_index_[server] = ((Server*)server_)->get_commit_index();
+									next_index_[server] = next_index_[server] + 1;
+									printf("match_index_[count]: %d = ((Server*)server_)->get_commit_index();\r\n", match_index_[server]);
+									Tracer::trace("(Leader." + std::to_string(((Server*)server_)->get_server_id()) + ") Sent append entry(AppendEntry) to Server." + std::to_string(server) + " successfully( match_index_[" + std::to_string(server) + "]" + std::to_string(match_index_[server]) + " ).\r\n", SeverityTrace::action_trace);
+									
+									send_append_entry_2nd_phase(match_index_[server], server);
 								}								
 							}
 							else {
-								next_index_[count] = next_index_[count] - 1;
-								printf("next_index_[count] : %d = next_index_[count] - 1;\r\n", next_index_[count]);
-								Tracer::trace("(Leader." + std::to_string(((Server*)server_)->get_server_id()) + ") Sent append entry(AppendEntry) to Server." + std::to_string(count) + " Consisency check, next_index_[" + std::to_string(count) + "]:" + std::to_string(next_index_[count]) +".\r\n", SeverityTrace::warning_trace);
+								next_index_[server] = next_index_[server] - 1;
+								printf("next_index_[count] : %d = next_index_[count] - 1;\r\n", next_index_[server]);
+								Tracer::trace("(Leader." + std::to_string(((Server*)server_)->get_server_id()) + ") Sent append entry(AppendEntry) to Server." + std::to_string(server) + " Consisency check, next_index_[" + std::to_string(server) + "]:" + std::to_string(next_index_[server]) +".\r\n", SeverityTrace::warning_trace);
 							}
 						}
 					}
 				}
 			}
-			// If server is updated. 
-			if (match_index_[count] == ((Server*)server_)->get_commit_index()) {
-				count_followers_ack_to_value_sent++;			
-				printf("count_followers_ack_to_value_sent: %d", count_followers_ack_to_value_sent);
-			}
-		}
-		if( (count_followers_ack_to_value_sent >= MAJORITY) && ( !first_time_achieve_majority_of_acks_from_followers ) ){
-			first_time_achieve_majority_of_acks_from_followers = true;	
-			thread_send_append_entry_2nd_phase_ = std::thread(&Leader::send_append_entry_2nd_phase, this);
-			printf("(count_followers_ack_to_value_sent >= MAJORITY)");
-		}
+			//// If server is updated. 
+			//if (match_index_[count] == ((Server*)server_)->get_commit_index()) {
+			//	count_followers_ack_to_value_sent++;			
+			//	printf("count_followers_ack_to_value_sent: %d", count_followers_ack_to_value_sent);
+			//}
+		}		
+		//if( (count_followers_ack_to_value_sent >= MAJORITY) && ( !first_time_achieve_majority_of_acks_from_followers ) ){
+		//	first_time_achieve_majority_of_acks_from_followers = true;	
+		//	thread_send_append_entry_2nd_phase_ = std::thread(&Leader::send_append_entry_2nd_phase, this);
+		//	printf("(count_followers_ack_to_value_sent >= MAJORITY)");
+		//}
 	}
 }
 
-void Leader::send_append_entry_2nd_phase()
+void Leader::send_append_entry_2nd_phase(int index, int server_to_apply_state_machine)
 {
-	((Server*)server_)->set_last_applied(((Server*)server_)->get_last_applied() + 1);
+	int count_followers_ack_to_value_sent = 0;
+	for (int server = 0; server < NUM_SERVERS; server++) {
+		if (match_index_[server] == index)
+			count_followers_ack_to_value_sent++;
+	}
 
-	Tracer::trace("¡¡¡¡¡¡¡¡(Leader." + std::to_string(((Server*)server_)->get_server_id()) + ") Applied "  + std::to_string(((Server*)server_)->get_state_machime_command(((Server*)server_)->get_log_index())) + " to STATE MACHINE!!!!!!!!\r\n", SeverityTrace::action_trace);
+	if (count_followers_ack_to_value_sent < MAJORITY) {
+		Tracer::trace("(Leader." + std::to_string(((Server*)server_)->get_server_id()) + ") There is not enought ACK " + std::to_string(((Server*)server_)->get_state_machime_command(((Server*)server_)->get_log_index())) + "\r\n", SeverityTrace::warning_trace);
 
-	int  count_all_follower_apply_value_to_state_machine = 0;
-	bool is_all_follower_applied_value_to_state_machine    = false;
-	bool folllowers_applied_value_to_state_machine[NUM_SERVERS];
-	memset(folllowers_applied_value_to_state_machine, false, sizeof(folllowers_applied_value_to_state_machine));
+	}
+	else if (count_followers_ack_to_value_sent == MAJORITY) {
+		
+		((Server*)server_)->set_last_applied(((Server*)server_)->get_last_applied() + 1);
 
-	ClientRequest client_request; 
-	client_request.client_id_			= client_request_.client_id_;
-	client_request.client_request_type	= ClientRequesTypeEnum::client_request_value;
-	client_request.client_result_		= true;	
+		Tracer::trace("¡¡¡¡¡¡¡¡(Leader." + std::to_string(((Server*)server_)->get_server_id()) + ") Applied " + std::to_string(((Server*)server_)->get_state_machime_command(((Server*)server_)->get_log_index())) + " to STATE MACHINE!!!!!!!!\r\n", SeverityTrace::action_trace);
 
-	// Replay Client...
-	send_msg_socket(&client_request,
-		SOCKET_BASE_PORT + SOCKET_RECEIVER_PORT + client_request_.client_id_,
-		std::string(SERVER_TEXT) + "(L)." + std::to_string(((Server*)server_)->get_server_id()),
-		std::string(CLIENT_REQUEST_VALUE_TEXT) + std::string("(") + std::string(INVOKE_TEXT) + std::string(")"),
-		std::string(CLIENT_TEXT) + "(Unique)." + std::to_string(client_request.client_id_)
-	);
-	Tracer::trace("(Leader." + std::to_string(((Server*)server_)->get_server_id()) + ") sending who is leader(" + std::to_string(((Server*)server_)->get_current_leader_id()) + ") to client." + std::to_string(client_request_.client_id_) + " .\r\n");
+		ClientRequest client_request;
+		client_request.client_id_ = client_request_.client_id_;
+		client_request.client_request_type = ClientRequesTypeEnum::client_request_value;
+		client_request.client_result_ = true;
 
+		// Replay Client...
+		send_msg_socket(&client_request,
+			SOCKET_BASE_PORT + SOCKET_RECEIVER_PORT + client_request_.client_id_,
+			std::string(SERVER_TEXT) + "(L)." + std::to_string(((Server*)server_)->get_server_id()),
+			std::string(CLIENT_REQUEST_VALUE_TEXT) + std::string("(") + std::string(INVOKE_TEXT) + std::string(")"),
+			std::string(CLIENT_TEXT) + "(Unique)." + std::to_string(client_request.client_id_)
+		);
+		Tracer::trace("(Leader." + std::to_string(((Server*)server_)->get_server_id()) + ") sending who is leader(" + std::to_string(((Server*)server_)->get_current_leader_id()) + ") to client." + std::to_string(client_request_.client_id_) + " .\r\n");
 
-	// Notify Client that values was executed to state machine. 
-	while ( ( !threads_have_to_die_ ) &&  ( !is_all_follower_applied_value_to_state_machine ) )
-	{
-		printf("while send_append_entry_2nd_phase\r\n");
-		for (int count = 0; ((count < NUM_SERVERS) && (!threads_have_to_die_)); count++)
-		{
-			// If server is not updated...
-			if (match_index_[count] != ((Server*)server_)->get_commit_index()) {
-				std::this_thread::sleep_for(std::chrono::milliseconds(1000));
-				continue;
-			}
-			// If server is updated, but it is already applied to state machine...
-			if( ( match_index_[count] == ((Server*)server_)->get_commit_index() ) && ( folllowers_applied_value_to_state_machine[count] == true ) )  {
-				std::this_thread::sleep_for(std::chrono::milliseconds(1000));
-				continue;
-			}
+		for (int server = 0; server < NUM_SERVERS; server++) {
 
-			std::this_thread::sleep_for(std::chrono::milliseconds(1));
-			{
-				std::lock_guard<std::mutex> locker_leader(mu_leader_);
+			// If the receiver is not equal to sender...
+			if (server != ((Server*)server_)->get_server_id()) {
 
-				if (!threads_have_to_die_) {
+				if (match_index_[server] == index) {
 
-					// If the receiver is not equal to sender...
-					if (count != ((Server*)server_)->get_server_id()) {
+					int result_term;
+					int result_success;
+					int	argument_entries[1000];
+					argument_entries[0] = ((Server*)server_)->get_state_machime_command(((Server*)server_)->get_log_index());
 
-						printf("SEND send_append_entry_2nd_phase: %d\r\n", count);
-
-						int result_term;
-						int result_success;
-						int	argument_entries[1000];
-						argument_entries[0] = ((Server*)server_)->get_state_machime_command(((Server*)server_)->get_log_index());
-
-						int status = ((Server*)server_)->send_append_entry_rpc(
-							RPCTypeEnum::rpc_append_entry,
-							RPCDirection::rpc_in_invoke,
-							((Server*)server_)->get_server_id(),
-							count,
-							RPC_BASE_PORT + RPC_RECEIVER_PORT + count,
-							((Server*)server_)->get_current_term(),														// Leader's term
-							((Server*)server_)->get_server_id(),														// So follower can redirect clients
-							next_index_[count] - 1,																		// Index of log entry immediately preceding	new ones
-							((Server*)server_)->get_term_of_entry_in_log(next_index_[count] - 1),						// Term of argument_prev_log_index entry
-							argument_entries,																			// Log entries to store(empty for heartbeat; may send more than one for efficiency)
-							((Server*)server_)->get_commit_index(),														// Leader’s commitIndex
-							&result_term,
-							&result_success
-						);
-						if (status) {
-							Tracer::trace("(Leader." + std::to_string(((Server*)server_)->get_server_id()) + ") Failed to send append entry(AppendEntry): " + std::to_string(status) + "\r\n", SeverityTrace::error_trace);
-						}
-						else {
-							if (result_success) {
-									Tracer::trace("(Leader." + std::to_string(((Server*)server_)->get_server_id()) + ") Sent append entry(AppendEntry) to apply State machine Follower." + std::to_string(count) + " successfully.\r\n", SeverityTrace::action_trace);
-									count_all_follower_apply_value_to_state_machine++;
-									folllowers_applied_value_to_state_machine[count] = true;
-							}
+					int status = ((Server*)server_)->send_append_entry_rpc(
+						RPCTypeEnum::rpc_append_entry,
+						RPCDirection::rpc_in_invoke,
+						((Server*)server_)->get_server_id(),
+						server,
+						RPC_BASE_PORT + RPC_RECEIVER_PORT + server,
+						((Server*)server_)->get_current_term(),														// Leader's term
+						((Server*)server_)->get_server_id(),														// So follower can redirect clients
+						next_index_[server] - 1,																		// Index of log entry immediately preceding	new ones
+						((Server*)server_)->get_term_of_entry_in_log(next_index_[server] - 1),						// Term of argument_prev_log_index entry
+						argument_entries,																			// Log entries to store(empty for heartbeat; may send more than one for efficiency)
+						index,														// Leader’s commitIndex
+						&result_term,
+						&result_success
+					);
+					if (status) {
+						Tracer::trace("(Leader." + std::to_string(((Server*)server_)->get_server_id()) + ") Failed to send append entry(AppendEntry): " + std::to_string(status) + "\r\n", SeverityTrace::error_trace);
+					}
+					else {
+						if (result_success) {
+							Tracer::trace("(Leader." + std::to_string(((Server*)server_)->get_server_id()) + ") Sent append entry(AppendEntry) to apply State machine Follower." + std::to_string(server) + " successfully.\r\n", SeverityTrace::action_trace);
 						}
 					}
 				}
 			}
 		}
-		if (count_all_follower_apply_value_to_state_machine == ( NUM_SERVERS - 1/*myself*/ )) {
-			printf("(count_all_follower_apply_value_to_state_machine == ( NUM_SERVERS - 1/*myself*/ ))\r\n");
-			is_all_follower_applied_value_to_state_machine = true;
+	}
+	else {
+
+		int result_term;
+		int result_success;
+		int	argument_entries[1000];
+		argument_entries[0] = ((Server*)server_)->get_state_machime_command(((Server*)server_)->get_log_index());
+
+		int status = ((Server*)server_)->send_append_entry_rpc(
+			RPCTypeEnum::rpc_append_entry,
+			RPCDirection::rpc_in_invoke,
+			((Server*)server_)->get_server_id(),
+			server_to_apply_state_machine,
+			RPC_BASE_PORT + RPC_RECEIVER_PORT + server_to_apply_state_machine,
+			((Server*)server_)->get_current_term(),														// Leader's term
+			((Server*)server_)->get_server_id(),														// So follower can redirect clients
+			next_index_[server_to_apply_state_machine] - 1,																		// Index of log entry immediately preceding	new ones
+			((Server*)server_)->get_term_of_entry_in_log(next_index_[server_to_apply_state_machine] - 1),						// Term of argument_prev_log_index entry
+			argument_entries,																			// Log entries to store(empty for heartbeat; may send more than one for efficiency)
+			index,														// Leader’s commitIndex
+			&result_term,
+			&result_success
+		);
+		if (status) {
+			Tracer::trace("(Leader." + std::to_string(((Server*)server_)->get_server_id()) + ") Failed to send append entry(AppendEntry): " + std::to_string(status) + "\r\n", SeverityTrace::error_trace);
 		}
+		else {
+			if (result_success) {
+				Tracer::trace("(Leader." + std::to_string(((Server*)server_)->get_server_id()) + ") Sent append entry(AppendEntry) to apply State machine Follower." + std::to_string(server_to_apply_state_machine) + " successfully.\r\n", SeverityTrace::action_trace);
+			}
+		}
+
 	}
 }
+
+
+
+//void Leader::send_append_entry_2nd_phase()
+//{
+//	((Server*)server_)->set_last_applied(((Server*)server_)->get_last_applied() + 1);
+//
+//	Tracer::trace("¡¡¡¡¡¡¡¡(Leader." + std::to_string(((Server*)server_)->get_server_id()) + ") Applied "  + std::to_string(((Server*)server_)->get_state_machime_command(((Server*)server_)->get_log_index())) + " to STATE MACHINE!!!!!!!!\r\n", SeverityTrace::action_trace);
+//
+//	int  count_all_follower_apply_value_to_state_machine = 0;
+//	bool is_all_follower_applied_value_to_state_machine    = false;
+//	bool folllowers_applied_value_to_state_machine[NUM_SERVERS];
+//	memset(folllowers_applied_value_to_state_machine, false, sizeof(folllowers_applied_value_to_state_machine));
+//
+//	ClientRequest client_request; 
+//	client_request.client_id_			= client_request_.client_id_;
+//	client_request.client_request_type	= ClientRequesTypeEnum::client_request_value;
+//	client_request.client_result_		= true;	
+//
+//	// Replay Client...
+//	send_msg_socket(&client_request,
+//		SOCKET_BASE_PORT + SOCKET_RECEIVER_PORT + client_request_.client_id_,
+//		std::string(SERVER_TEXT) + "(L)." + std::to_string(((Server*)server_)->get_server_id()),
+//		std::string(CLIENT_REQUEST_VALUE_TEXT) + std::string("(") + std::string(INVOKE_TEXT) + std::string(")"),
+//		std::string(CLIENT_TEXT) + "(Unique)." + std::to_string(client_request.client_id_)
+//	);
+//	Tracer::trace("(Leader." + std::to_string(((Server*)server_)->get_server_id()) + ") sending who is leader(" + std::to_string(((Server*)server_)->get_current_leader_id()) + ") to client." + std::to_string(client_request_.client_id_) + " .\r\n");
+//
+//
+//	// Notify Client that values was executed to state machine. 
+//	while ( ( !threads_have_to_die_ ) &&  ( !is_all_follower_applied_value_to_state_machine ) )
+//	{
+//		printf("while send_append_entry_2nd_phase\r\n");
+//		for (int count = 0; ((count < NUM_SERVERS) && (!threads_have_to_die_)); count++)
+//		{
+//			// If server is not updated...
+//			if (match_index_[count] != ((Server*)server_)->get_commit_index()) {
+//				std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+//				continue;
+//			}
+//			// If server is updated, but it is already applied to state machine...
+//			if( ( match_index_[count] == ((Server*)server_)->get_commit_index() ) && ( folllowers_applied_value_to_state_machine[count] == true ) )  {
+//				std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+//				continue;
+//			}
+//
+//			std::this_thread::sleep_for(std::chrono::milliseconds(1));
+//			{
+//				std::lock_guard<std::mutex> locker_leader(mu_leader_);
+//
+//				if (!threads_have_to_die_) {
+//
+//					// If the receiver is not equal to sender...
+//					if (count != ((Server*)server_)->get_server_id()) {
+//
+//						printf("SEND send_append_entry_2nd_phase: %d\r\n", count);
+//
+//						int result_term;
+//						int result_success;
+//						int	argument_entries[1000];
+//						argument_entries[0] = ((Server*)server_)->get_state_machime_command(((Server*)server_)->get_log_index());
+//
+//						int status = ((Server*)server_)->send_append_entry_rpc(
+//							RPCTypeEnum::rpc_append_entry,
+//							RPCDirection::rpc_in_invoke,
+//							((Server*)server_)->get_server_id(),
+//							count,
+//							RPC_BASE_PORT + RPC_RECEIVER_PORT + count,
+//							((Server*)server_)->get_current_term(),														// Leader's term
+//							((Server*)server_)->get_server_id(),														// So follower can redirect clients
+//							next_index_[count] - 1,																		// Index of log entry immediately preceding	new ones
+//							((Server*)server_)->get_term_of_entry_in_log(next_index_[count] - 1),						// Term of argument_prev_log_index entry
+//							argument_entries,																			// Log entries to store(empty for heartbeat; may send more than one for efficiency)
+//							((Server*)server_)->get_commit_index(),														// Leader’s commitIndex
+//							&result_term,
+//							&result_success
+//						);
+//						if (status) {
+//							Tracer::trace("(Leader." + std::to_string(((Server*)server_)->get_server_id()) + ") Failed to send append entry(AppendEntry): " + std::to_string(status) + "\r\n", SeverityTrace::error_trace);
+//						}
+//						else {
+//							if (result_success) {
+//									Tracer::trace("(Leader." + std::to_string(((Server*)server_)->get_server_id()) + ") Sent append entry(AppendEntry) to apply State machine Follower." + std::to_string(count) + " successfully.\r\n", SeverityTrace::action_trace);
+//									count_all_follower_apply_value_to_state_machine++;
+//									folllowers_applied_value_to_state_machine[count] = true;
+//							}
+//						}
+//					}
+//				}
+//			}
+//		}
+//		if (count_all_follower_apply_value_to_state_machine == ( NUM_SERVERS - 1/*myself*/ )) {
+//			printf("(count_all_follower_apply_value_to_state_machine == ( NUM_SERVERS - 1/*myself*/ ))\r\n");
+//			is_all_follower_applied_value_to_state_machine = true;
+//		}
+//	}
+//}

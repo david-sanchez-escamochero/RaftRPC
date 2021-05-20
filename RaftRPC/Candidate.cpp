@@ -125,6 +125,8 @@ void Candidate::send_request_vote_to_all_servers()
 					}
 				}
 			}
+			/* initialize random seed: */
+			srand((unsigned int)time(NULL));
 			int ramdom_timeout = (rand() % MINIMUM_VALUE_RAMDOM_TIME_OUT) + MINIMUM_VALUE_RAMDOM_TIME_OUT;
 			std::this_thread::sleep_for(std::chrono::milliseconds(ramdom_timeout));
 			Tracer::trace("ramdom_timeout(1): " + std::to_string(ramdom_timeout) + "\r\n");

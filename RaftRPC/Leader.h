@@ -40,7 +40,8 @@ protected:
 	bool					threads_have_to_die_;
 	void					send_heart_beat_all_servers();	
 	void					send_append_entry_1th_phase();
-	void					send_append_entry_2nd_phase();
+	//void					send_append_entry_2nd_phase();
+	void					send_append_entry_2nd_phase(int index, int server_to_apply_state_machine);
 	std::condition_variable cv_send_heart_beat_all_servers_;
 
 
