@@ -41,3 +41,6 @@ enum class StateEnum { follower_state, leader_state, candidate_state, unknown_st
 #define NONE													-1
 
 
+#define TIME_OUT_MASTER											60000//(ms)
+
+

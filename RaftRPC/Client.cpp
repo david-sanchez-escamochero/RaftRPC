@@ -83,7 +83,7 @@ void* Client::receive()
                 }
             } 
             else if (                
-                (client_request.client_request_type == ClientRequesTypeEnum::client_request_value) &&
+                (client_request.client_request_type == ClientRequesTypeEnum::client_write_master) &&
                 (client_request.client_result_ == (uint32_t)true)
                 ) {                
                 cv_committed_value_.notify_one();
@@ -125,7 +125,7 @@ bool Client::send_request(std::string file_name, uint32_t leader_id)
             std::this_thread::sleep_for(std::chrono::milliseconds(1000));
             
             ClientRequest client_request;             
-            client_request.client_request_type = ClientRequesTypeEnum::client_request_value;
+            client_request.client_request_type = ClientRequesTypeEnum::client_write_master;
             client_request.client_id_ = client_id_;
             client_request.client_value_ = atoi(value.c_str());
             cv_status time_out; 

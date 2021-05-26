@@ -48,8 +48,13 @@ protected:
 	// Dispatch
 	void					dispatch_client_request_leader(ClientRequest* client_request);
 	void					dispatch_client_request_value(ClientRequest* client_request);
-
+	void					dispatch_client_ping_master(ClientRequest* client_request);
 	
+	// Master
+	int						master_;
+	long					deadline_master_;
+	long					current_time_master_;
+
 
 	void append_entry_role(
 		/* [in] */ int argument_term,

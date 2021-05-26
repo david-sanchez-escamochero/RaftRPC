@@ -22,11 +22,14 @@ std::string RaftUtils::parse_from_socket_enum_to_text(ClientRequesTypeEnum type)
 	std::string ret;
 	switch (type) {
 
-	case ClientRequesTypeEnum::client_request_value:
+	case ClientRequesTypeEnum::client_write_master:
 		ret = std::string(CLIENT_REQUEST_VALUE_TEXT);
 		break;
 	case ClientRequesTypeEnum::client_request_leader:
 		ret = std::string(CLIENT_REQUEST_LEADER_TEXT);
+		break;
+	case ClientRequesTypeEnum::client_ping_master:
+		ret = std::string(CLIENT_PING_TEXT);
 		break;
 	default:
 		ret = std::string(UNKNOWN_TEXT);

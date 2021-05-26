@@ -5,6 +5,7 @@
 #include "Tracer.h"
 #include "RaftUtils.h"
 
+#define IP_SERVER_RAFT "192.168.1.22"
 
 Communication::Communication() {
 
@@ -30,7 +31,7 @@ int Communication::sendMessage(ClientRequest* client_request, unsigned short por
 
     //Obtenemos la IP del servidor... en este caso
     // localhost indica nuestra propia máquina...
-    hp = (struct hostent*)gethostbyname("localhost");
+    hp = (struct hostent*)gethostbyname(client_request->client_ip_);
 
     if (!hp) {      
         str_trace = "[<<<<< Sent([" + action + "]" + sender + " -> " + receiver + "(" + std::to_string(port) + "))  - FAILED] - (Server not found)\r\n";
@@ -94,7 +95,7 @@ int Communication::receiveMessage(ClientRequest* client_request, unsigned short 
 
     //Obtenemos la IP que usará nuestro servidor... 
     // en este caso localhost indica nuestra propia máquina...
-    hp = (struct hostent*)gethostbyname("localhost");
+    hp = (struct hostent*)gethostbyname(IP_SERVER_RAFT);
 
     if (!hp) {
         str_trace = "[>>>>> Received(" + receiver + "(" + std::to_string(port) + ")) - FAILED] (Server not found)\r\n";

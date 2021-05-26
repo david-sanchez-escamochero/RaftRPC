@@ -94,7 +94,7 @@ void Follower::receive_msg_socket(ClientRequest* client_request)
 		dispatch_client_request_leader(client_request);
 	}
 	// A client request value
-	else if (client_request->client_request_type == ClientRequesTypeEnum::client_request_value) {
+	else if (client_request->client_request_type == ClientRequesTypeEnum::client_write_master) {
 		dispatch_client_request_value(client_request);
 	}
 	else
