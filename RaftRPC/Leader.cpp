@@ -392,7 +392,7 @@ void Leader::send_append_entry_2nd_phase(int index, int server_to_apply_state_ma
 
 		ClientRequest client_request;
 		client_request.client_id_ = client_request_.client_id_;
-		strcpy(client_request.client_ip_, client_request_.client_ip_);
+		strcpy_s(client_request.client_ip_, sizeof(client_request.client_ip_), client_request_.client_ip_);
 		client_request.client_leader_ = client_request_.client_leader_;
 		client_request.client_master_ = client_request_.client_master_;		
 		client_request.client_request_type = ClientRequesTypeEnum::client_write_master;		
