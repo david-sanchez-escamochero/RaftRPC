@@ -392,8 +392,12 @@ void Leader::send_append_entry_2nd_phase(int index, int server_to_apply_state_ma
 
 		ClientRequest client_request;
 		client_request.client_id_ = client_request_.client_id_;
-		client_request.client_request_type = ClientRequesTypeEnum::client_write_master;
+		strcpy(client_request.client_ip_, client_request_.client_ip_);
+		client_request.client_leader_ = client_request_.client_leader_;
+		client_request.client_master_ = client_request_.client_master_;		
+		client_request.client_request_type = ClientRequesTypeEnum::client_write_master;		
 		client_request.client_result_ = true;
+		
 
 		// Replay Client...
 		send_msg_socket(&client_request,

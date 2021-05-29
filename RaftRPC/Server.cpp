@@ -55,7 +55,16 @@ Server::~Server()
 
 void Server::send_msg_socket(ClientRequest* client_request, unsigned short port, std::string sender, std::string action, std::string receiver)
 {
-	communication_.sendMessage(client_request, port, sender, action, receiver);
+	int error = MSG_SUCCESS;
+	int tries = 0; 
+	do{
+		error = communication_.sendMessage(client_request, port, sender, action, receiver);
+		if (error != MSG_SUCCESS) {
+			std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+		}
+
+	} while ((error != MSG_SUCCESS) && (tries++ < 5));
+	
 }
 
 void Server::start() 

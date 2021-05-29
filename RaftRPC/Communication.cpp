@@ -34,7 +34,7 @@ int Communication::sendMessage(ClientRequest* client_request, unsigned short por
     hp = (struct hostent*)gethostbyname(client_request->client_ip_);
 
     if (!hp) {      
-        str_trace = "[<<<<< Sent([" + action + "]" + sender + " -> " + receiver + "(" + std::to_string(port) + "))  - FAILED] - (Server not found)\r\n";
+        str_trace = "[<<<<< Sent([" + action + "]" + sender + " -> " + receiver + "(" + std::to_string(port) + "))  - FAILED] - (Server not found: " + client_request->client_ip_ + ")\r\n";
         Tracer::trace(str_trace, SeverityTrace::error_trace);
         WSACleanup(); return MSG_ERROR_UNKNOWN_SERVER;
     }
