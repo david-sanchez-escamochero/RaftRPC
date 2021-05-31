@@ -53,7 +53,7 @@ protected:
 	// Master
 	int						master_;
 	long					deadline_master_;
-	long					current_time_master_;
+	
 
 
 	void append_entry_role(

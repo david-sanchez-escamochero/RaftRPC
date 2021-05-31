@@ -9,6 +9,8 @@ Leader::Leader(void* server)
 	threads_have_to_die_	= false;
 	master_					= NONE;
 	have_to_die_			= false;	
+	deadline_master_		= 0;
+	
 	
 	// Initialize next_index_ & match_index arrays. 	
 	for (int count = 0; count < NUM_SERVERS; count++) {
@@ -119,7 +121,12 @@ void Leader::dispatch_client_request_leader(ClientRequest* client_request)
 
 void Leader::dispatch_client_request_value(ClientRequest* client_request)
 {
-	if ( (master_ == NONE) || (deadline_master_ < current_time_master_) ){
+	if ( (master_ == NONE) || (deadline_master_ <= client_request->client_seconds_january_1_1970 ) ){
+
+		Tracer::trace("(Leader." + std::to_string(((Server*)server_)->get_server_id()) + ") New value: " + std::to_string(client_request->client_value_) + " \r\n", SeverityTrace::action_trace);
+		Tracer::trace("(Leader." + std::to_string(((Server*)server_)->get_server_id()) + ") New value: "  + std::to_string(client_request->client_value_) + " \r\n", SeverityTrace::action_trace);
+		Tracer::trace("(Leader." + std::to_string(((Server*)server_)->get_server_id()) + ") New value: " + std::to_string(client_request->client_value_) + " \r\n", SeverityTrace::action_trace);
+
 		master_ = client_request->client_value_;
 		deadline_master_ = client_request->client_seconds_january_1_1970 + TIME_OUT_MASTER;
 		client_request->client_result_ = 1;
@@ -165,8 +172,11 @@ void Leader::dispatch_client_request_value(ClientRequest* client_request)
 
 void Leader::dispatch_client_ping_master(ClientRequest* client_request) 
 {
-	if ( (client_request->client_value_) && (deadline_master_ < client_request->client_seconds_january_1_1970) ) {
+	if ( (client_request->client_value_ == master_) && (deadline_master_ <= client_request->client_seconds_january_1_1970) ) {
 		deadline_master_ = client_request->client_seconds_january_1_1970 + TIME_OUT_MASTER;
+		Tracer::trace("Leaader:: client ping master: " + std::to_string(client_request->client_value_) + "\r\n");
+		Tracer::trace("Leaader:: client ping master: " + std::to_string(client_request->client_value_) +"\r\n");
+		Tracer::trace("Leaader:: client ping master: " + std::to_string(client_request->client_value_) + "\r\n");
 	}
 	else {
 		master_ = NONE;
@@ -187,7 +197,7 @@ void Leader::receive_msg_socket(ClientRequest* client_request)
 		dispatch_client_ping_master(client_request);
 	}
 	else
-		Tracer::trace("Follower::dispatch - Wrong!!! type " + std::to_string(static_cast<int>(client_request->client_request_type)) + "\r\n");
+		Tracer::trace("Leaader::dispatch - Wrong!!! type " + std::to_string(static_cast<int>(client_request->client_request_type)) + "\r\n");
 }
 
 
