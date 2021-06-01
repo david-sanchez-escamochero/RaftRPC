@@ -172,7 +172,7 @@ void Leader::dispatch_client_request_value(ClientRequest* client_request)
 
 void Leader::dispatch_client_ping_master(ClientRequest* client_request) 
 {
-	if ( (client_request->client_value_ == master_) && (deadline_master_ <= client_request->client_seconds_january_1_1970) ) {
+	if ( (client_request->client_value_ == master_) && (deadline_master_ >= client_request->client_seconds_january_1_1970) ) {
 		deadline_master_ = client_request->client_seconds_january_1_1970 + TIME_OUT_MASTER;
 		Tracer::trace("Leaader:: client ping master: " + std::to_string(client_request->client_value_) + "\r\n");
 		Tracer::trace("Leaader:: client ping master: " + std::to_string(client_request->client_value_) +"\r\n");
